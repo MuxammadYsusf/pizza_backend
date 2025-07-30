@@ -1,0 +1,84 @@
+syntax = "proto3";
+
+package pizza;
+
+option go_package = "generated/pizza";
+
+service PizzaService{
+    rpc CreatePizza(CreatePizzaRequest) returns (CreatePizzaResponse);
+    rpc GetPizzas(GetPizzasRequest) returns (GetPizzasResponse);
+    rpc GetPizzaById(GetPizzaByIdRequest) returns (GetPizzaByIdResponse);
+    rpc UpdatePizza(UpdatePizzaRequest) returns (UpdatePizzaResponse);
+    rpc DeletePizza(DeletePizzaRequest) returns (DeletePizzaResponse);
+    rpc OrderPizza(OrderPizzaRequest) returns (OrderPizzaResponse);
+}
+
+message CreatePizzaRequest {
+    string name = 1;
+    float price = 2;
+    int32 id = 3;
+    int32 typeId = 4;
+}
+
+message CreatePizzaResponse {
+    string message = 1;
+}
+
+message GetPizzasRequest {
+    int32 typeId = 1;
+}
+
+message GetPizzasResponse {
+    repeated Pizzas pizzas = 1;
+}
+
+message Pizzas {
+    string name = 1;
+    float price = 2;
+}
+
+message GetPizzaByIdRequest {
+    int32 id = 1;
+    int32 typeId = 2;
+}
+
+message GetPizzaByIdResponse {
+    string name = 1;
+    float price = 2;
+}
+
+message UpdatePizzaRequest {
+    int32 id = 1;
+    int32 typeId = 2;
+}
+
+message UpdatePizzaResponse {
+    string name = 1;
+    string description = 2;
+    float price = 3;
+    int32 id = 4;
+    int32 typeId = 5;
+}
+
+message DeletePizzaRequest {
+    int32 id = 1;
+    int32 typeId = 2;
+
+}
+
+message DeletePizzaResponse {
+    string message = 1;
+}
+
+message OrderPizzaRequest {
+    int32 id = 1;
+    int32 typeId = 2;
+    int32 quantity = 3;
+}
+
+message OrderPizzaResponse {
+    string message = 1;
+}
+
+
+
