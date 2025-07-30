@@ -13,6 +13,10 @@ type pizzas struct {
 
 type PizzaRepo interface {
 	CreatePizza(ctx context.Context, req *pizza.CreatePizzaRequest) (*pizza.CreatePizzaResponse, error)
+	GetPizzaById(ctx context.Context, req *pizza.GetPizzaByIdRequest) (*pizza.GetPizzaByIdResponse, error)
+	GetPizzas(ctx context.Context, req *pizza.GetPizzasRequest) (*pizza.GetPizzasResponse, error)
+	UpdatePizza(ctx context.Context, req *pizza.UpdatePizzaRequest) (*pizza.UpdatePizzaResponse, error)
+	DeletePizza(ctx context.Context, req *pizza.DeletePizzaRequest) (*pizza.DeletePizzaResponse, error)
 }
 
 func NewPizza(db *sql.DB) PizzaRepo {
@@ -85,5 +89,52 @@ func (p *pizzas) GetPizzas(ctx context.Context, req *pizza.GetPizzasRequest) (*p
 
 	return &pizza.GetPizzasResponse{
 		Pizzas: pizzas,
+	}, nil
+}
+
+func (p *pizzas) UpdatePizza(ctx context.Context, req *pizza.UpdatePizzaRequest) (*pizza.UpdatePizzaResponse, error) {
+
+	query := `UPDATE pizza SET name = $3, price = $4 WHERE id = $1 AND typeId = $2`
+
+	_, err := p.db.Exec(
+		query,
+		req.Name,
+		req.Price,
+		req.Id,
+		req.TypeId,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pizza.UpdatePizzaResponse{
+		Message: "success",
+		Name:    req.Name,
+		Price:   req.Price,
+	}, nil
+}
+
+func (p *pizzas) DeletePizza(ctx context.Context, req *pizza.DeletePizzaRequest) (*pizza.DeletePizzaResponse, error) {
+
+	query := `DELETE FROM pizza WHERE id = $1 AND typeId = $2`
+
+	result, err := p.db.Exec(
+		query,
+		req.Id,
+		req.TypeId,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if rowsAffected == 0 {
+		return nil, sql.ErrNoRows
+	} else if err != nil {
+		return nil, err
+	}
+
+	return &pizza.DeletePizzaResponse{
+		Message: "success",
 	}, nil
 }
