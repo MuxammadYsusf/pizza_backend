@@ -10,10 +10,14 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// The struct name `login` is not ideal. Consider renaming it to `auth` or `authentication`.
+// The reason is that this struct handles both login and registration, not just login.
 type login struct {
 	db *sql.DB
 }
 
+// The interface name `LoginRepo` is acceptable, but consider renaming it to something more general like `AuthRepo`.
+// In the future, you might add features like logout, password reset, or token validation, so a broader name is more suitable.
 type LoginRepo interface {
 	Reg(ctx context.Context, req *session.RegisterRequest) (*session.RegisterResponse, error)
 	Login(ctx context.Context, req *session.LoginRequest) (*session.LoginResponse, error)
@@ -47,6 +51,7 @@ func (l *login) IsEmailTaken(name string) (bool, error) {
 	return exists, nil
 }
 
+// Use the full word instead of abbreviation: rename `Reg` to `Register` for better readability and consistency.
 func (l *login) Reg(ctx context.Context, req *session.RegisterRequest) (*session.RegisterResponse, error) {
 
 	tx, err := l.db.Begin()
@@ -64,6 +69,8 @@ func (l *login) Reg(ctx context.Context, req *session.RegisterRequest) (*session
 		return nil, fmt.Errorf("user already exists")
 	}
 
+	// ❗️You are using IsNameTaken again for email, which is incorrect.
+	// Use `IsEmailTaken` instead to check for email uniqueness.
 	exists, err = l.IsNameTaken(req.Email)
 	if err != nil {
 		tx.Rollback()
@@ -76,7 +83,10 @@ func (l *login) Reg(ctx context.Context, req *session.RegisterRequest) (*session
 
 	defer tx.Commit()
 
-	query := `INSERT INTO users VALUES(name, password, email)`
+	// ❗️ You are trying to store the password without hashing it. This is a very serious security issue.
+	// You already have a HashPassword function — make sure to use it before saving the password.
+
+	query := `INSERT INTO users VALUES(name, password, email)` // This query will not work. Review and fix it.
 
 	_, err = tx.Exec(
 		query,
@@ -97,7 +107,10 @@ func (l *login) Login(ctx context.Context, req *session.LoginRequest) (*session.
 
 	var user models.User
 
-	query := `SELECT id, name, password, role FROM users WHERE name = $1 AND password = $2`
+	// ❗️ In the Login function, you're selecting a user by both name and password in the query.
+	// This is bad practice. Instead, first fetch the user by name (or email),
+	// then compare the password using `CheckPasswordHash` for better security.
+	query := `SELECT id, name, password, role FROM users WHERE name = $1 AND password = $2` 
 
 	err := l.db.QueryRow(query, req.Username, req.Password).Scan(user.ID, user.Username, user.Password, user.Role)
 	if err != nil {
