@@ -3,6 +3,7 @@ syntax = "proto3";
 package pizza;
 
 option go_package = "generated/pizza";
+import "google/protobuf/timestamp.proto";
 
 service PizzaService{
     rpc CreatePizza(CreatePizzaRequest) returns (CreatePizzaResponse);
@@ -10,7 +11,11 @@ service PizzaService{
     rpc GetPizzaById(GetPizzaByIdRequest) returns (GetPizzaByIdResponse);
     rpc UpdatePizza(UpdatePizzaRequest) returns (UpdatePizzaResponse);
     rpc DeletePizza(DeletePizzaRequest) returns (DeletePizzaResponse);
+    rpc CheckIsCartExist(CheckIsCartExistRequest) returns (CheckIsCartExistResponse);
+    rpc Cart(CartRequest) returns (CartResponse);
+    rpc CheckIsOrdered(CheckIsOrderedRequest) returns (CheckIsOrderedResponse);
     rpc OrderPizza(OrderPizzaRequest) returns (OrderPizzaResponse);
+    rpc GetUserHistory(GetUserHistoryRequest) returns (GetUserHistoryResponse);
 }
 
 message CreatePizzaRequest {
@@ -71,14 +76,79 @@ message DeletePizzaResponse {
     string message = 1;
 }
 
+message CheckIsCartExistRequest {
+    int32 userId = 1;
+    bool isActive = 2;
+    int32 id = 3;
+}
+
+message CheckIsCartExistResponse {
+    string message = 1;
+    bool isActive = 2;
+}
+
+message CartRequest {
+    int32 id = 1;
+    int32 userId = 2;
+    bool isActive = 3;
+    float totalCost = 4;
+    int32 cartItemId = 5;
+    int32 pizzaId = 6;
+    int32 pizzaTypeId = 7;
+    float cost = 8;
+    int32 quantity = 9;
+    int32 cartId = 10;   
+}
+
+message CartResponse {
+    string message = 1;
+}
+
+message CheckIsOrderedRequest {
+    int32 userId = 1;
+    bool isOrdered = 2;
+    int32 id = 3;
+}
+
+message CheckIsOrderedResponse {
+    string message = 1;
+    bool isOrdered = 2;
+    string status = 3;
+}
+
 message OrderPizzaRequest {
     int32 id = 1;
-    int32 typeId = 2;
-    int32 quantity = 3;
+    google.protobuf.Timestamp date = 2;
+    bool isOrdered = 3;
+    int32 userId = 4;
+    string status = 5;
+    int32 itemId = 6;
+    int32 pizza_id = 7;
+    int32 pizza_type_id = 8;
+    int32 cart_id = 9;
+    int32 quantity = 10;
 }
 
 message OrderPizzaResponse {
     string message = 1;
+}
+
+message GetUserHistoryRequest {
+    int32 id = 1;
+    int32 userId = 2;
+}
+
+message GetUserHistoryResponse {
+    int32 id = 1;
+    int32 userId = 2;
+    bool isActive = 3;
+    float totalCost = 4;
+    int32 cartItemId = 5;
+    int32 pizzaId = 6;
+    int32 pizzaTypeId = 7;
+    float cost = 8;
+    int32 quantity = 9;
+    int32 cartId = 10; 
 }
 
 

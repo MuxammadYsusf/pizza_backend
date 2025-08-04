@@ -85,3 +85,14 @@ func (h *Handler) DeletePizza(ctx *gin.Context) {
 
 	ctx.JSON(200, resp)
 }
+
+func (h *Handler) PutPizzaIntoCart(ctx *gin.Context) {
+
+	resp, err := h.GRPCClient.Pizza().Cart(ctx, &pizza.CartRequest{})
+	if err != nil {
+		ctx.JSON(500, err.Error())
+		return
+	}
+
+	ctx.JSON(200, resp)
+}

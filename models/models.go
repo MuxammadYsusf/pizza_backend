@@ -1,5 +1,7 @@
 package models
 
+import "time"
+
 type User struct {
 	ID       int    `json:"id"`
 	Username string `json:"username"`
@@ -13,4 +15,19 @@ type Pizza struct {
 	Price    float32 `json:"price"`
 	TypeId   int     `json:"typeId"`
 	Quantity int     `json:"quantity"`
+}
+
+type Cart struct {
+	ID        int     `json:"id"`
+	UserId    int     `json:"userId"`
+	IsActive  bool    `json:"isActive"`
+	TotalCost float32 `json:"totalCost"`
+}
+
+type Order struct {
+	ID        int       `json:"id"`
+	Date      time.Time `json:"date"`
+	IsOrdered bool      `json:"isOrdered"`
+	UserId    int       `json:"userId"`
+	Status    string    `json:"status"`
 }

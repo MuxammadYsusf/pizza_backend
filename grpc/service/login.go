@@ -25,6 +25,12 @@ func (s *LoginService) Register(ctx context.Context, req *session.RegisterReques
 		return nil, fmt.Errorf("invalid name or password")
 	}
 
+	if req.Password == "admin" {
+		req.Role = "admin"
+	} else {
+		req.Role = "user"
+	}
+
 	resp, err := s.loginPostgres.Login().Reg(ctx, req)
 	if err != nil {
 		return nil, err

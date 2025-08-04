@@ -2,7 +2,14 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"github/http/copy/task4/generated/pizza"
+)
+
+const (
+	statusInProgress = "in progress"
+	statusDone       = "done"
+	statusCanceled   = "canceled"
 )
 
 func (s *PizzaService) CreatePizza(ctx context.Context, req *pizza.CreatePizzaRequest) (*pizza.CreatePizzaResponse, error) {
@@ -47,6 +54,56 @@ func (s *PizzaService) UpdatePizza(ctx context.Context, req *pizza.UpdatePizzaRe
 func (s *PizzaService) DeletePizza(ctx context.Context, req *pizza.DeletePizzaRequest) (*pizza.DeletePizzaResponse, error) {
 
 	resp, err := s.pizzaPostgres.Pizza().DeletePizza(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
+
+func (s *PizzaService) Cart(ctx context.Context, req *pizza.CartRequest) (*pizza.CartResponse, error) {
+
+	exists, err := s.pizzaPostgres.Pizza().CheckIsCartExist(ctx, &pizza.CheckIsCartExistRequest{
+		UserId: req.UserId,
+	})
+	if err != nil {
+		if !exists.IsActive {
+			return nil, fmt.Errorf("cart is not exist")
+		}
+		return nil, err
+	}
+
+	resp, err := s.pizzaPostgres.Pizza().Cart(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = s.pizzaPostgres.Pizza().CartItems(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
+
+func (s *PizzaService) OrderPizza(ctx context.Context, req *pizza.OrderPizzaRequest) (*pizza.OrderPizzaResponse, error) {
+
+	exists, err := s.pizzaPostgres.Pizza().CheckIsOrdered(ctx, &pizza.CheckIsOrderedRequest{
+		UserId: req.UserId,
+	})
+	if err != nil {
+		if !exists.IsOrdered || exists.Status != statusInProgress {
+			return nil, fmt.Errorf("you have not ordered a pizza yet or you canceled the order")
+		}
+		return nil, err
+	}
+
+	resp, err := s.pizzaPostgres.Pizza().Order(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = s.pizzaPostgres.Pizza().OrderItem(ctx, req)
 	if err != nil {
 		return nil, err
 	}

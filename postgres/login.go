@@ -76,13 +76,15 @@ func (l *login) Reg(ctx context.Context, req *session.RegisterRequest) (*session
 
 	defer tx.Commit()
 
-	query := `INSERT INTO users VALUES(name, password, email)`
+	query := `INSERT INTO users VALUES(name, password, email, role)`
 
 	_, err = tx.Exec(
 		query,
 		req.Username,
 		req.Password,
-		req.Email)
+		req.Email,
+		req.Role,
+	)
 	if err != nil {
 		tx.Rollback()
 		return nil, err

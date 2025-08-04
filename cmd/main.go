@@ -44,5 +44,22 @@ func main() {
 	r.POST("/login", cont.Login)
 	r.POST("/register", cont.Register)
 
+	auth := r.Group("/", cont.AuthMiddleware)
+	{
+		auth.GET("/pizzas", cont.GetPizzas)
+		auth.GET("/pizzas/:id", cont.GetPizzaById)
+		auth.POST("/cart", cont.PutPizzaIntoCart)
+	}
+
+	admin := r.Group("/admin", cont.AdminOnlyMiddleware)
+	{
+		admin.POST("/pizza", cont.CreatePizza)
+		admin.GET("/pizzas", cont.GetPizzas)
+		admin.GET("/pizzas/:id", cont.GetPizzaById)
+		admin.PUT("/pizzas/:id", cont.UpdatePizza)
+		admin.DELETE("/pizzas/:id", cont.DeletePizza)
+		admin.POST("/cart", cont.PutPizzaIntoCart)
+	}
+
 	r.Run(cfg.HttpPort)
 }
