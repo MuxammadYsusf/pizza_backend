@@ -261,20 +261,3 @@ func (p *pizzas) OrderItem(ctx context.Context, req *pizza.OrderPizzaRequest) (*
 		Message: "success",
 	}, nil
 }
-
-// IN PROGRESS...
-// func (p *pizzas) GetUserHistory(ctx context.Context, req *pizza.GetUserHistoryRequest) (*pizza.GetUserHistoryResponse, error) {
-// 	var cart models.Order
-
-// 	query := `SELECT is_ordered, date FROM orders WHERE id = $1 AND user_id = $2`
-
-// 	err := p.db.QueryRow(query, req.Id, req.UserId).Scan(req.Id, cart.IsOrdered, cart.Date)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	return &pizza.CheckIsOrderedResponse{
-// 		Message:   "success",
-// 		IsOrdered: cart.IsOrdered,
-// 	}, nil
-// }

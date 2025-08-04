@@ -101,7 +101,17 @@ message CartRequest {
 }
 
 message CartResponse {
-    string message = 1;
+    int32 id = 1;
+    int32 userId = 2;
+    bool exists = 3;
+    float totalCost = 4;
+    int32 cartItemId = 5;
+    int32 pizzaId = 6;
+    int32 pizzaTypeId = 7;
+    float cost = 8;
+    int32 quantity = 9;
+    int32 cartId = 10;  
+    string message = 11;
 }
 
 message CheckIsOrderedRequest {
