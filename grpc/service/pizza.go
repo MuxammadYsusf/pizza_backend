@@ -63,19 +63,23 @@ func (s *PizzaService) DeletePizza(ctx context.Context, req *pizza.DeletePizzaRe
 
 func (s *PizzaService) Cart(ctx context.Context, req *pizza.CartRequest) (*pizza.CartResponse, error) {
 
+	var resp *pizza.CartResponse
+
 	exists, err := s.pizzaPostgres.Pizza().CheckIsCartExist(ctx, &pizza.CheckIsCartExistRequest{
 		UserId: req.UserId,
 	})
 	if err != nil {
-		if !exists.IsActive {
-			return nil, fmt.Errorf("cart is not exist")
-		}
 		return nil, err
 	}
 
-	resp, err := s.pizzaPostgres.Pizza().Cart(ctx, req)
-	if err != nil {
-		return nil, err
+	if !exists.IsActive {
+		resp, err = s.pizzaPostgres.Pizza().Cart(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+	}
+	resp = &pizza.CartResponse{
+		Message: "the cart already exists",
 	}
 
 	_, err = s.pizzaPostgres.Pizza().CartItems(ctx, req)
@@ -92,8 +96,8 @@ func (s *PizzaService) OrderPizza(ctx context.Context, req *pizza.OrderPizzaRequ
 		UserId: req.UserId,
 	})
 	if err != nil {
-		if !exists.IsOrdered || exists.Status != statusInProgress {
-			return nil, fmt.Errorf("you have not ordered a pizza yet or you canceled the order")
+		if exists.IsOrdered || exists.Status == statusInProgress {
+			return nil, fmt.Errorf("you already have an order in progress")
 		}
 		return nil, err
 	}

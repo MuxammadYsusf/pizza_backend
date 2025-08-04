@@ -33,7 +33,8 @@ func NewPizza(db *sql.DB) PizzaRepo {
 
 func (p *pizzas) CreatePizza(ctx context.Context, req *pizza.CreatePizzaRequest) (*pizza.CreatePizzaResponse, error) {
 
-	query := `INSERT INTO pizza VALUES(name, price, id, type_id)`
+	query := `INSERT INTO pizza(name, price, id, type_id) 
+	VALUES($1, $2, $3, $4)`
 
 	_, err := p.db.Exec(
 		query,
@@ -56,7 +57,7 @@ func (p *pizzas) GetPizzaById(ctx context.Context, req *pizza.GetPizzaByIdReques
 
 	query := `SELECT name, price FROM pizza WHERE id = $1 AND type_id= $2`
 
-	err := p.db.QueryRow(query, req.Id, req.TypeId).Scan(req.Id, req.TypeId, pizzas.Name, pizzas.Price)
+	err := p.db.QueryRow(query, req.Id, req.TypeId).Scan(&req.Id, &req.TypeId, &pizzas.Name, &pizzas.Price)
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +84,7 @@ func (p *pizzas) GetPizzas(ctx context.Context, req *pizza.GetPizzasRequest) (*p
 	for rows.Next() {
 		var name string
 		var price float32
-		if err := rows.Scan(name, price); err != nil {
+		if err := rows.Scan(&name, &price); err != nil {
 			return nil, err
 		}
 
@@ -148,9 +149,9 @@ func (p *pizzas) DeletePizza(ctx context.Context, req *pizza.DeletePizzaRequest)
 func (p *pizzas) CheckIsCartExist(ctx context.Context, req *pizza.CheckIsCartExistRequest) (*pizza.CheckIsCartExistResponse, error) {
 	var cart models.Cart
 
-	query := `SELECT is_acive, total_cost FROM cart WHERE id = $1 AND user_id = $2`
+	query := `SELECT is_acive FROM cart WHERE id = $1 AND user_id = $2`
 
-	err := p.db.QueryRow(query, req.Id, req.UserId).Scan(req.Id, cart.IsActive, cart.TotalCost)
+	err := p.db.QueryRow(query, req.Id, req.UserId).Scan(&cart.IsActive)
 	if err != nil {
 		return nil, err
 	}
@@ -163,7 +164,8 @@ func (p *pizzas) CheckIsCartExist(ctx context.Context, req *pizza.CheckIsCartExi
 
 func (p *pizzas) Cart(ctx context.Context, req *pizza.CartRequest) (*pizza.CartResponse, error) {
 
-	query := `INSERT INTO cart VALUES(user_id, is_active, tootal_cost)`
+	query := `INSERT INTO cart(user_id, is_active, tootal_cost) 
+	VALUES($1, $2, $3)`
 
 	_, err := p.db.Exec(
 		query,
@@ -182,7 +184,8 @@ func (p *pizzas) Cart(ctx context.Context, req *pizza.CartRequest) (*pizza.CartR
 
 func (p *pizzas) CartItems(ctx context.Context, req *pizza.CartRequest) (*pizza.CartResponse, error) {
 
-	query := `INSERT INTO cart_item VALUES(pizza_id, pizza_type_id, cost, cart_id, quantity)`
+	query := `INSERT INTO cart_item(pizza_id, pizza_type_id, cost, cart_id, quantity)
+	VALUES($1, $2, $3, $4, $5)`
 
 	_, err := p.db.Exec(
 		query,
@@ -204,9 +207,9 @@ func (p *pizzas) CartItems(ctx context.Context, req *pizza.CartRequest) (*pizza.
 func (p *pizzas) CheckIsOrdered(ctx context.Context, req *pizza.CheckIsOrderedRequest) (*pizza.CheckIsOrderedResponse, error) {
 	var cart models.Order
 
-	query := `SELECT is_ordered, date FROM orders WHERE id = $1 AND user_id = $2`
+	query := `SELECT is_ordered, status FROM orders WHERE id = $1 AND user_id = $2`
 
-	err := p.db.QueryRow(query, req.Id, req.UserId).Scan(req.Id, cart.IsOrdered, cart.Date)
+	err := p.db.QueryRow(query, req.Id, req.UserId).Scan(&cart.IsOrdered, &cart.Status)
 	if err != nil {
 		return nil, err
 	}
@@ -219,7 +222,8 @@ func (p *pizzas) CheckIsOrdered(ctx context.Context, req *pizza.CheckIsOrderedRe
 
 func (p *pizzas) Order(ctx context.Context, req *pizza.OrderPizzaRequest) (*pizza.OrderPizzaResponse, error) {
 
-	query := `INSERT INTO orders VALUES(date, is_ordered, user_id, status)`
+	query := `INSERT INTO orders(date, is_ordered, user_id, status) 
+	VALUES($1, $2, $3, $4)`
 
 	_, err := p.db.Exec(
 		query,
@@ -239,7 +243,8 @@ func (p *pizzas) Order(ctx context.Context, req *pizza.OrderPizzaRequest) (*pizz
 
 func (p *pizzas) OrderItem(ctx context.Context, req *pizza.OrderPizzaRequest) (*pizza.OrderPizzaResponse, error) {
 
-	query := `INSERT INTO order_item VALUES(pizza_id, pizza_type_id, cart_id, quantity)`
+	query := `INSERT INTO order_item(pizza_id, pizza_type_id, cart_id, quantity) 
+	VALUES($1, $2, $3, $4)`
 
 	_, err := p.db.Exec(
 		query,
@@ -257,18 +262,19 @@ func (p *pizzas) OrderItem(ctx context.Context, req *pizza.OrderPizzaRequest) (*
 	}, nil
 }
 
-func (p *pizzas) GetUserHistory(ctx context.Context, req *pizza.GetUserHistoryRequest) (*pizza.GetUserHistoryResponse, error) {
-	var cart models.Order
+// IN PROGRESS...
+// func (p *pizzas) GetUserHistory(ctx context.Context, req *pizza.GetUserHistoryRequest) (*pizza.GetUserHistoryResponse, error) {
+// 	var cart models.Order
 
-	query := `SELECT is_ordered, date FROM orders WHERE id = $1 AND user_id = $2`
+// 	query := `SELECT is_ordered, date FROM orders WHERE id = $1 AND user_id = $2`
 
-	err := p.db.QueryRow(query, req.Id, req.UserId).Scan(req.Id, cart.IsOrdered, cart.Date)
-	if err != nil {
-		return nil, err
-	}
+// 	err := p.db.QueryRow(query, req.Id, req.UserId).Scan(req.Id, cart.IsOrdered, cart.Date)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	return &pizza.CheckIsOrderedResponse{
-		Message:   "success",
-		IsOrdered: cart.IsOrdered,
-	}, nil
-}
+// 	return &pizza.CheckIsOrderedResponse{
+// 		Message:   "success",
+// 		IsOrdered: cart.IsOrdered,
+// 	}, nil
+// }
