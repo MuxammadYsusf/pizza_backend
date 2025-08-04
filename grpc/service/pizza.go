@@ -96,10 +96,10 @@ func (s *PizzaService) OrderPizza(ctx context.Context, req *pizza.OrderPizzaRequ
 		UserId: req.UserId,
 	})
 	if err != nil {
-		if exists.IsOrdered || exists.Status == statusInProgress {
-			return nil, fmt.Errorf("you already have an order in progress")
-		}
 		return nil, err
+	}
+	if exists.IsOrdered || exists.Status == statusInProgress {
+		return nil, fmt.Errorf("you already have an order in progress")
 	}
 
 	resp, err := s.pizzaPostgres.Pizza().Order(ctx, req)
