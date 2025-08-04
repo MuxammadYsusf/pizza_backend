@@ -83,7 +83,8 @@ func (a *auth) Register(ctx context.Context, req *session.RegisterRequest) (*ses
 
 	defer tx.Commit()
 
-	query := `INSERT INTO users VALUES(name, password, email, role)`
+	query := `INSERT INTO users(name, password, email, role)
+	VALUES($1, $2, $3, $4)`
 
 	_, err = tx.Exec(
 		query,
@@ -108,7 +109,7 @@ func (a *auth) Login(ctx context.Context, req *session.LoginRequest) (*session.L
 
 	query := `SELECT id, name, password, role FROM users WHERE name = $1 AND password = $2`
 
-	err := a.db.QueryRow(query, req.Username, req.Password).Scan(user.ID, user.Username, user.Password, user.Role)
+	err := a.db.QueryRow(query, req.Username, req.Password).Scan(&user.ID, &user.Username, &user.Password, &user.Role)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("user not found")
