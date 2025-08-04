@@ -10,25 +10,25 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type login struct {
+type auth struct {
 	db *sql.DB
 }
 
-type LoginRepo interface {
-	Reg(ctx context.Context, req *session.RegisterRequest) (*session.RegisterResponse, error)
+type AuthRepo interface {
+	Register(ctx context.Context, req *session.RegisterRequest) (*session.RegisterResponse, error)
 	Login(ctx context.Context, req *session.LoginRequest) (*session.LoginResponse, error)
 }
 
-func NewLogin(db *sql.DB) LoginRepo {
-	return &login{
+func NewAuth(db *sql.DB) AuthRepo {
+	return &auth{
 		db: db,
 	}
 }
 
-func (l *login) IsNameTaken(name string) (bool, error) {
+func (a *auth) IsNameTaken(name string) (bool, error) {
 
 	var exists bool
-	err := l.db.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE name = $1)", name).Scan(&exists)
+	err := a.db.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE name = $1)", name).Scan(&exists)
 	if err != nil {
 		return false, err
 	}
@@ -36,10 +36,10 @@ func (l *login) IsNameTaken(name string) (bool, error) {
 	return exists, nil
 }
 
-func (l *login) IsEmailTaken(name string) (bool, error) {
+func (a *auth) IsEmailTaken(name string) (bool, error) {
 
 	var exists bool
-	err := l.db.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE email = $1)", name).Scan(&exists)
+	err := a.db.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE email = $1)", name).Scan(&exists)
 	if err != nil {
 		return false, err
 	}
@@ -47,14 +47,14 @@ func (l *login) IsEmailTaken(name string) (bool, error) {
 	return exists, nil
 }
 
-func (l *login) Reg(ctx context.Context, req *session.RegisterRequest) (*session.RegisterResponse, error) {
+func (a *auth) Register(ctx context.Context, req *session.RegisterRequest) (*session.RegisterResponse, error) {
 
-	tx, err := l.db.Begin()
+	tx, err := a.db.Begin()
 	if err != nil {
 		return nil, err
 	}
 
-	exists, err := l.IsNameTaken(req.Username)
+	exists, err := a.IsNameTaken(req.Username)
 	if err != nil {
 		tx.Rollback()
 		return nil, err
@@ -64,7 +64,7 @@ func (l *login) Reg(ctx context.Context, req *session.RegisterRequest) (*session
 		return nil, fmt.Errorf("user already exists")
 	}
 
-	exists, err = l.IsNameTaken(req.Email)
+	exists, err = a.IsEmailTaken(req.Email)
 	if err != nil {
 		tx.Rollback()
 		return nil, err
@@ -73,6 +73,13 @@ func (l *login) Reg(ctx context.Context, req *session.RegisterRequest) (*session
 		tx.Rollback()
 		return nil, fmt.Errorf("user already exists")
 	}
+
+	hashedPassword, err := HashPassword(req.Password)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	req.Password = hashedPassword
 
 	defer tx.Commit()
 
@@ -81,7 +88,7 @@ func (l *login) Reg(ctx context.Context, req *session.RegisterRequest) (*session
 	_, err = tx.Exec(
 		query,
 		req.Username,
-		req.Password,
+		hashedPassword,
 		req.Email,
 		req.Role,
 	)
@@ -95,13 +102,13 @@ func (l *login) Reg(ctx context.Context, req *session.RegisterRequest) (*session
 	}, nil
 }
 
-func (l *login) Login(ctx context.Context, req *session.LoginRequest) (*session.LoginResponse, error) {
+func (a *auth) Login(ctx context.Context, req *session.LoginRequest) (*session.LoginResponse, error) {
 
 	var user models.User
 
 	query := `SELECT id, name, password, role FROM users WHERE name = $1 AND password = $2`
 
-	err := l.db.QueryRow(query, req.Username, req.Password).Scan(user.ID, user.Username, user.Password, user.Role)
+	err := a.db.QueryRow(query, req.Username, req.Password).Scan(user.ID, user.Username, user.Password, user.Role)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("user not found")

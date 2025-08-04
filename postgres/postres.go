@@ -4,12 +4,12 @@ import "database/sql"
 
 type NewPostgresI interface {
 	Pizza() PizzaRepo
-	Login() LoginRepo
+	Login() AuthRepo
 }
 
 type store struct {
 	pizza PizzaRepo
-	login LoginRepo
+	auth  AuthRepo
 	db    *sql.DB
 }
 
@@ -17,14 +17,14 @@ func (s *store) Pizza() PizzaRepo {
 	return s.pizza
 }
 
-func (s *store) Login() LoginRepo {
-	return s.login
+func (s *store) Login() AuthRepo {
+	return s.auth
 }
 
 func NewPostgres(db *sql.DB) NewPostgresI {
 	return &store{
 		db:    db,
 		pizza: NewPizza(db),
-		login: NewLogin(db),
+		auth:  NewAuth(db),
 	}
 }

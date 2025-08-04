@@ -31,7 +31,7 @@ func (s *LoginService) Register(ctx context.Context, req *session.RegisterReques
 		req.Role = "user"
 	}
 
-	resp, err := s.loginPostgres.Login().Reg(ctx, req)
+	resp, err := s.loginPostgres.Login().Register(ctx, req)
 	if err != nil {
 		return nil, err
 	}
