@@ -31,3 +31,13 @@ type Order struct {
 	UserId    int       `json:"userId"`
 	Status    string    `json:"status"`
 }
+
+type CartItems struct {
+	ID          int32   `json:"id"`
+	PizzaId     int32   `json:"pizzaId"`
+	PizzaTypeId int32   `json:"pizzaTypeId"`
+	Cost        float32 `json:"cost"`
+	CartId      int32   `json:"cartId"`
+	Quantity    int32   `json:"quantity"`
+	TotalCost   float32 `json:"totalCost"`
+}

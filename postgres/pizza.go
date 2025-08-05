@@ -20,6 +20,10 @@ type PizzaRepo interface {
 	CheckIsCartExist(ctx context.Context, req *pizza.CheckIsCartExistRequest) (*pizza.CheckIsCartExistResponse, error)
 	Cart(ctx context.Context, req *pizza.CartRequest) (*pizza.CartResponse, error)
 	CartItems(ctx context.Context, req *pizza.CartRequest) (*pizza.CartResponse, error)
+	GetFromCart(ctx context.Context, req *pizza.CartItems) (*pizza.CartItemsResp, error)
+	GetFromPizza(ctx context.Context, req *pizza.CartItems) (*pizza.CartItemsResp, error)
+	UpdatePizzaInCart(ctx context.Context, req *pizza.CartItems) (*pizza.CartItemsResp, error)
+	UpdateTotalCost(ctx context.Context, req *pizza.CartItems) (*pizza.CartItemsResp, error)
 	CheckIsOrdered(ctx context.Context, req *pizza.CheckIsOrderedRequest) (*pizza.CheckIsOrderedResponse, error)
 	Order(ctx context.Context, req *pizza.OrderPizzaRequest) (*pizza.OrderPizzaResponse, error)
 	OrderItem(ctx context.Context, req *pizza.OrderPizzaRequest) (*pizza.OrderPizzaResponse, error)
@@ -200,6 +204,82 @@ func (p *pizzas) CartItems(ctx context.Context, req *pizza.CartRequest) (*pizza.
 	}
 
 	return &pizza.CartResponse{
+		Message: "success",
+	}, nil
+}
+
+func (p *pizzas) GetFromCart(ctx context.Context, req *pizza.CartItems) (*pizza.CartItemsResp, error) {
+
+	query := `
+    SELECT pizza_id, cart_id FROM cart_item WHERE id = $1
+`
+	err := p.db.QueryRow(query, req.Id).Scan(&req.PizzaId, &req.CartId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pizza.CartItemsResp{
+		CartId:  req.CartId,
+		PizzaId: req.PizzaId,
+	}, nil
+}
+
+func (p *pizzas) GetFromPizza(ctx context.Context, req *pizza.CartItems) (*pizza.CartItemsResp, error) {
+
+	query := `
+    SELECT cost FROM pizza WHERE id = $1
+`
+	err := p.db.QueryRow(query, req.PizzaId).Scan(&req.Cost)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pizza.CartItemsResp{
+		Cost: req.Cost,
+	}, nil
+}
+
+func (p *pizzas) UpdatePizzaInCart(ctx context.Context, req *pizza.CartItems) (*pizza.CartItemsResp, error) {
+
+	query := `UPDATE cart_item SET quantity = $3, cost = $4 WHERE id = $1 AND piazza_id = $2`
+
+	_, err := p.db.Exec(
+		query,
+		req.Id,
+		req.PizzaId,
+		req.Quantity,
+		req.Cost,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pizza.CartItemsResp{
+		Message: "success",
+	}, nil
+}
+
+func (p *pizzas) UpdateTotalCost(ctx context.Context, req *pizza.CartItems) (*pizza.CartItemsResp, error) {
+
+	query := `UPDATE cart
+	SET total_cost = (
+  		SELECT COALESCE(SUM(cost), 0)
+  		FROM cart_item
+  		WHERE cart_id = $1
+	)
+	WHERE id = $1`
+
+	_, err := p.db.Exec(
+		query,
+		req.Id,
+		req.UserId,
+		req.TotalCost,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pizza.CartItemsResp{
 		Message: "success",
 	}, nil
 }

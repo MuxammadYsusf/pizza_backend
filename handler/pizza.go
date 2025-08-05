@@ -96,3 +96,21 @@ func (h *Handler) PutPizzaIntoCart(ctx *gin.Context) {
 
 	ctx.JSON(200, resp)
 }
+
+func (h *Handler) UpdatePizzaInCart(ctx *gin.Context) {
+
+	var req pizza.CartItems
+
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(400, err.Error())
+		return
+	}
+
+	resp, err := h.GRPCClient.Pizza().UpdatePizzaInCart(ctx, &req)
+	if err != nil {
+		ctx.JSON(500, err.Error())
+		return
+	}
+
+	ctx.JSON(200, resp)
+}

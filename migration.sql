@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS orders (
 CREATE TABLE IF NOT EXISTS order_item (
     id SERIAL PRIMARY KEY,
     pizza_id INT NOT NULL,
-    pizza_price FLOAT NOT NULL,
+    cost FLOAT NOT NULL,
     quantity INT NOT NULL,
     order_id INT NOT NULL,
     FOREIGN KEY (pizza_id) REFERENCES pizza(id),

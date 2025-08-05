@@ -61,7 +61,6 @@ func (s *PizzaService) DeletePizza(ctx context.Context, req *pizza.DeletePizzaRe
 	return resp, nil
 }
 
-// 🛠IN PROGRESS...
 func (s *PizzaService) Cart(ctx context.Context, req *pizza.CartRequest) (*pizza.CartResponse, error) {
 
 	var resp *pizza.CartResponse
@@ -84,6 +83,37 @@ func (s *PizzaService) Cart(ctx context.Context, req *pizza.CartRequest) (*pizza
 	}
 
 	_, err = s.pizzaPostgres.Pizza().CartItems(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
+
+func (s *PizzaService) UpdatePizzaInCart(ctx context.Context, req *pizza.CartItems) (*pizza.CartItemsResp, error) {
+
+	cart, err := s.pizzaPostgres.Pizza().GetFromCart(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	req.CartId = cart.CartId
+	req.PizzaId = cart.PizzaId
+
+	pizza, err := s.pizzaPostgres.Pizza().GetFromPizza(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	newCost := pizza.Cost * float32(req.Quantity)
+	req.Cost = newCost
+
+	resp, err := s.pizzaPostgres.Pizza().UpdatePizzaInCart(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = s.pizzaPostgres.Pizza().UpdateTotalCost(ctx, req)
 	if err != nil {
 		return nil, err
 	}

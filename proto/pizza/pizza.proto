@@ -16,6 +16,7 @@ service PizzaService{
     rpc CheckIsOrdered(CheckIsOrderedRequest) returns (CheckIsOrderedResponse);
     rpc OrderPizza(OrderPizzaRequest) returns (OrderPizzaResponse);
     rpc GetUserHistory(GetUserHistoryRequest) returns (GetUserHistoryResponse);
+    rpc UpdatePizzaInCart(CartItems) returns (CartItemsResp);
 }
 
 message CreatePizzaRequest {
@@ -101,17 +102,7 @@ message CartRequest {
 }
 
 message CartResponse {
-    int32 id = 1;
-    int32 userId = 2;
-    bool exists = 3;
-    float totalCost = 4;
-    int32 cartItemId = 5;
-    int32 pizzaId = 6;
-    int32 pizzaTypeId = 7;
-    float cost = 8;
-    int32 quantity = 9;
-    int32 cartId = 10;  
-    string message = 11;
+    string message = 1;
 }
 
 message CheckIsOrderedRequest {
@@ -146,6 +137,26 @@ message OrderPizzaResponse {
 message GetUserHistoryRequest {
     int32 id = 1;
     int32 userId = 2;
+}
+
+message CartItems {
+    float totalCost = 1;
+    int32 cartItemId = 2;
+    int32 pizzaId = 3;
+    int32 pizzaTypeId = 4;
+    float cost = 5;
+    int32 quantity = 6;
+    int32 cartId = 7;
+    int32 id = 8;  
+    int32 userId = 9;
+}
+
+message CartItemsResp {
+    repeated CartItems cartItems = 1;
+    string message = 2;
+    int32 cartId = 3;
+    int32 pizzaId = 4;  
+    float cost = 5; 
 }
 
 message GetUserHistoryResponse {
