@@ -48,25 +48,25 @@ func main() {
 	auth := r.Group("/", cont.AuthMiddleware)
 	{
 		auth.GET("/pizzas", cont.GetPizzas)
-		auth.GET("/pizzas/:id", cont.GetPizzaById)
+		auth.GET("/pizzas/:typeId", cont.GetPizzaById)
 		auth.POST("/pizzas/cart", cont.PutPizzaIntoCart)
 		auth.POST("pizzas/order", cont.OrderPizza)
 		auth.PUT("pizzas/update_pizza", cont.UpdatePizzaInCart)
-		auth.GET("/history", cont.GetCartHistory)
-		auth.GET("/history/:id", cont.GetCartItemHistory)
+		auth.GET("/pizzas/history", cont.GetCartHistory)
+		auth.GET("/pizzas/history/:id", cont.GetCartItemHistory)
 	}
 
 	admin := r.Group("/admin", cont.AdminOnlyMiddleware)
 	{
-		admin.POST("/pizza", cont.CreatePizza)
-		admin.GET("/pizzas", cont.GetPizzas)
-		admin.GET("/pizzas/:id", cont.GetPizzaById)
-		admin.PUT("/pizzas/update/:id", cont.UpdatePizza)
-		admin.DELETE("/pizzas/:id", cont.DeletePizza)
-		admin.POST("/cart", cont.PutPizzaIntoCart)
-		admin.PUT("pizzas/update_pizza", cont.UpdatePizzaInCart)
-		admin.GET("/history", cont.GetCartHistory)
-		admin.GET("/history/:id", cont.GetCartItemHistory)
+		admin.POST("/pizza/create", cont.CreatePizza)
+		admin.GET("/pizzas/get", cont.GetPizzas)
+		admin.GET("/pizzas/get/:typeId", cont.GetPizzaById)
+		admin.PUT("/pizzas/update/:id/:typeId", cont.UpdatePizza)
+		admin.DELETE("/pizzas/:id/:typeId", cont.DeletePizza)
+		admin.POST("/pizzas/cart", cont.PutPizzaIntoCart)
+		admin.PUT("pizzas/update_cart", cont.UpdatePizzaInCart)
+		admin.GET("/pizzas/history", cont.GetCartHistory)
+		admin.GET("/pizzas/history/:id", cont.GetCartItemHistory)
 	}
 
 	r.Run(cfg.HttpPort)
