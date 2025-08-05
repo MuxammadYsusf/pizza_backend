@@ -10,7 +10,7 @@ import (
 func (s *LoginService) Register(ctx context.Context, req *session.RegisterRequest) (*session.RegisterResponse, error) {
 
 	if req.Username == "" || req.Email == "" || req.Password == "" {
-		return nil, fmt.Errorf("invalid name or password or phone number")
+		return nil, fmt.Errorf("invalid name or password or email address")
 	}
 
 	if strings.ContainsAny(req.Username, "!@#$%&*()№:;<>?'\";--") {
