@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS pizza (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
-    price FLOAT NOT NULL,
+    cost FLOAT NOT NULL,
     type_id INT NOT NULL,
     FOREIGN KEY (type_id) REFERENCES types(id)
 );
