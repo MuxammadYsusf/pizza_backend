@@ -42,8 +42,8 @@ func main() {
 
 	r := gin.Default()
 
-	r.POST("/login", cont.Login)
-	r.POST("/register", cont.Register)
+	r.POST("/pizzas/login", cont.Login)
+	r.POST("/pizzas/register", cont.Register)
 
 	auth := r.Group("/", cont.AuthMiddleware)
 	{
