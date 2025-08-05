@@ -3,18 +3,13 @@ package service
 import (
 	"context"
 	"fmt"
+	c "github/http/copy/task4/constants"
 	"github/http/copy/task4/generated/pizza"
-)
-
-const (
-	statusInProgress = "in progress"
-	statusDone       = "done"
-	statusCanceled   = "canceled"
 )
 
 func (s *PizzaService) CreatePizzaType(ctx context.Context, req *pizza.CreatePizzaRequest) (*pizza.CreatePizzaResponse, error) {
 
-	resp, err := s.pizzaPostgres.Pizza().CreatePizza(ctx, req)
+	resp, err := s.pizzaPostgres.Pizza().CreatePizzaType(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -139,7 +134,7 @@ func (s *PizzaService) OrderPizza(ctx context.Context, req *pizza.OrderPizzaRequ
 	if err != nil {
 		return nil, err
 	}
-	if exists.IsOrdered || exists.Status == statusInProgress {
+	if exists.IsOrdered || exists.Status == c.OrderStatusInProgress {
 		return nil, fmt.Errorf("you already have an order in progress")
 	}
 

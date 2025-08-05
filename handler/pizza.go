@@ -1,6 +1,7 @@
 package handler
 
 import (
+	c "github/http/copy/task4/constants"
 	"github/http/copy/task4/generated/pizza"
 
 	"github.com/gin-gonic/gin"
@@ -10,41 +11,41 @@ func (h *Handler) CreatePizzaType(ctx *gin.Context) {
 	var req pizza.CreatePizzaRequest
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(400, err.Error())
+		ctx.JSON(c.BadReq, gin.H{"error": err})
 		return
 	}
 
 	resp, err := h.GRPCClient.Pizza().CreatePizzaType(ctx, &req)
 	if err != nil {
-		ctx.JSON(500, err.Error())
+		ctx.JSON(c.Err, gin.H{"error": err})
 		return
 	}
 
-	ctx.JSON(200, resp)
+	ctx.JSON(c.OK, resp)
 }
 
 func (h *Handler) CreatePizza(ctx *gin.Context) {
 	var req pizza.CreatePizzaRequest
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(400, err.Error())
+		ctx.JSON(c.BadReq, gin.H{"error": err})
 		return
 	}
 
 	resp, err := h.GRPCClient.Pizza().CreatePizza(ctx, &req)
 	if err != nil {
-		ctx.JSON(500, err.Error())
+		ctx.JSON(c.Err, gin.H{"error": err})
 		return
 	}
 
-	ctx.JSON(200, resp)
+	ctx.JSON(c.OK, resp)
 }
 
 func (h *Handler) GetPizzas(ctx *gin.Context) {
 
 	resp, err := h.GRPCClient.Pizza().GetPizzas(ctx, &pizza.GetPizzasRequest{})
 	if err != nil {
-		ctx.JSON(500, err.Error())
+		ctx.JSON(c.Err, gin.H{"error": err})
 		return
 	}
 
@@ -61,11 +62,11 @@ func (h *Handler) GetPizzaById(ctx *gin.Context) {
 		TypeId: int32(typeId),
 	})
 	if err != nil {
-		ctx.JSON(500, err.Error())
+		ctx.JSON(c.Err, gin.H{"error": err})
 		return
 	}
 
-	ctx.JSON(200, resp)
+	ctx.JSON(c.OK, resp)
 }
 
 func (h *Handler) UpdatePizza(ctx *gin.Context) {
@@ -73,17 +74,17 @@ func (h *Handler) UpdatePizza(ctx *gin.Context) {
 	var req pizza.UpdatePizzaRequest
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(400, err.Error())
+		ctx.JSON(c.Empty, gin.H{"error": err})
 		return
 	}
 
 	resp, err := h.GRPCClient.Pizza().UpdatePizza(ctx, &req)
 	if err != nil {
-		ctx.JSON(500, err.Error())
+		ctx.JSON(c.Err, gin.H{"error": err})
 		return
 	}
 
-	ctx.JSON(200, resp)
+	ctx.JSON(c.OK, resp)
 }
 
 func (h *Handler) DeletePizza(ctx *gin.Context) {
@@ -96,22 +97,22 @@ func (h *Handler) DeletePizza(ctx *gin.Context) {
 		TypeId: int32(typeId),
 	})
 	if err != nil {
-		ctx.JSON(500, err.Error())
+		ctx.JSON(c.Err, gin.H{"error": err})
 		return
 	}
 
-	ctx.JSON(200, resp)
+	ctx.JSON(c.OK, resp)
 }
 
 func (h *Handler) PutPizzaIntoCart(ctx *gin.Context) {
 
 	resp, err := h.GRPCClient.Pizza().Cart(ctx, &pizza.CartRequest{})
 	if err != nil {
-		ctx.JSON(500, err.Error())
+		ctx.JSON(c.Err, gin.H{"error": err})
 		return
 	}
 
-	ctx.JSON(200, resp)
+	ctx.JSON(c.OK, resp)
 }
 
 func (h *Handler) UpdatePizzaInCart(ctx *gin.Context) {
@@ -119,17 +120,17 @@ func (h *Handler) UpdatePizzaInCart(ctx *gin.Context) {
 	var req pizza.CartItems
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(400, err.Error())
+		ctx.JSON(c.Empty, gin.H{"error": err})
 		return
 	}
 
 	resp, err := h.GRPCClient.Pizza().UpdatePizzaInCart(ctx, &req)
 	if err != nil {
-		ctx.JSON(500, err.Error())
+		ctx.JSON(c.Err, gin.H{"error": err})
 		return
 	}
 
-	ctx.JSON(200, resp)
+	ctx.JSON(c.OK, resp)
 }
 
 func (h *Handler) OrderPizza(ctx *gin.Context) {
@@ -137,28 +138,28 @@ func (h *Handler) OrderPizza(ctx *gin.Context) {
 	var req pizza.OrderPizzaRequest
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(400, err.Error())
+		ctx.JSON(c.Empty, gin.H{"error": err})
 		return
 	}
 
 	resp, err := h.GRPCClient.Pizza().OrderPizza(ctx, &req)
 	if err != nil {
-		ctx.JSON(500, err.Error())
+		ctx.JSON(c.Err, gin.H{"error": err})
 		return
 	}
 
-	ctx.JSON(200, resp)
+	ctx.JSON(c.OK, resp)
 }
 
 func (h *Handler) GetCartHistory(ctx *gin.Context) {
 
 	resp, err := h.GRPCClient.Pizza().GetUserHistory(ctx, &pizza.GetCartHistoryRequest{})
 	if err != nil {
-		ctx.JSON(500, err.Error())
+		ctx.JSON(c.Err, gin.H{"error": err})
 		return
 	}
 
-	ctx.JSON(200, resp)
+	ctx.JSON(c.OK, resp)
 }
 
 func (h *Handler) GetCartItemHistory(ctx *gin.Context) {
@@ -169,9 +170,9 @@ func (h *Handler) GetCartItemHistory(ctx *gin.Context) {
 		CartHistoryId: int32(id),
 	})
 	if err != nil {
-		ctx.JSON(500, err.Error())
+		ctx.JSON(c.Err, gin.H{"error": err})
 		return
 	}
 
-	ctx.JSON(200, resp)
+	ctx.JSON(c.OK, resp)
 }

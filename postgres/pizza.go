@@ -43,7 +43,7 @@ func NewPizza(db *sql.DB) PizzaRepo {
 
 func (p *pizzas) CreatePizzaType(ctx context.Context, req *pizza.CreatePizzaRequest) (*pizza.CreatePizzaResponse, error) {
 
-	query := `INSERT INTO pizza(name, price, type_id) 
+	query := `INSERT INTO types(name) 
 	VALUES($1)`
 
 	_, err := p.db.Exec(
@@ -61,7 +61,7 @@ func (p *pizzas) CreatePizzaType(ctx context.Context, req *pizza.CreatePizzaRequ
 
 func (p *pizzas) CreatePizza(ctx context.Context, req *pizza.CreatePizzaRequest) (*pizza.CreatePizzaResponse, error) {
 
-	query := `INSERT INTO pizza(name, price, type_id) 
+	query := `INSERT INTO pizza(name, cost, type_id) 
 	VALUES($1, $2, $3)`
 
 	_, err := p.db.Exec(

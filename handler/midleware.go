@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github/http/copy/task4/config"
+	c "github/http/copy/task4/constants"
 	"github/http/copy/task4/security"
 	"strings"
 
@@ -13,18 +14,18 @@ import (
 
 func (h *Handler) AuthMiddleware(ctx *gin.Context) {
 	if ctx.Request.Method == "PRI" && ctx.Request.RequestURI == "*" {
-		ctx.JSON(200, "OK")
+		ctx.JSON(c.OK, "")
 	}
 
 	authHeader := ctx.GetHeader("Authorization")
 	if authHeader != "" {
-		ctx.JSON(401, "unauthorized")
+		ctx.JSON(c.UnAuth, "unauthorized")
 		return
 	}
 
 	tokenStr := strings.Split(authHeader, " ")
 	if len(tokenStr) != 2 || tokenStr[0] != "Bearer" {
-		ctx.JSON(500, "unauthorized: invalid token format")
+		ctx.JSON(c.BadReq, gin.H{"unauthorized": " invalid token format"})
 		return
 	}
 
@@ -40,7 +41,7 @@ func (h *Handler) AuthMiddleware(ctx *gin.Context) {
 	fmt.Println("token", token)
 
 	if err != nil || !token.Valid {
-		ctx.JSON(401, "unauthorized")
+		ctx.JSON(c.UnAuth, gin.H{"error": "unauthorized"})
 		return
 	}
 
@@ -55,9 +56,12 @@ func (h *Handler) AdminOnlyMiddleware(ctx *gin.Context) {
 		return
 	}
 
-	role, exists := ctx.Get("role")
-	if !exists || role != "admin" {
-		ctx.JSON(403, "no no no mr fish")
+	tokenStr := strings.TrimPrefix(ctx.GetHeader("Authorization"), "Bearer ")
+	token, _, _ := new(jwt.Parser).ParseUnverified(tokenStr, jwt.MapClaims{})
+	role := token.Claims.(jwt.MapClaims)["role"].(string)
+
+	if role != "admin" {
+		ctx.JSON(c.Forbidden, gin.H{"error": errors.New("no no no mr fish")})
 		return
 	}
 
