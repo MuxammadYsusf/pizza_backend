@@ -7,6 +7,7 @@ import "google/protobuf/timestamp.proto";
 
 service PizzaService{
     rpc CreatePizza(CreatePizzaRequest) returns (CreatePizzaResponse);
+    rpc CreatePizzaType(CreatePizzaRequest) returns (CreatePizzaResponse);
     rpc GetPizzas(GetPizzasRequest) returns (GetPizzasResponse);
     rpc GetPizzaById(GetPizzaByIdRequest) returns (GetPizzaByIdResponse);
     rpc UpdatePizza(UpdatePizzaRequest) returns (UpdatePizzaResponse);
@@ -23,8 +24,7 @@ service PizzaService{
 message CreatePizzaRequest {
     string name = 1;
     float price = 2;
-    int32 id = 3;
-    int32 typeId = 4;
+    int32 typeId = 3;
 }
 
 message CreatePizzaResponse {

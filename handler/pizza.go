@@ -6,6 +6,23 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func (h *Handler) CreatePizzaType(ctx *gin.Context) {
+	var req pizza.CreatePizzaRequest
+
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(400, err.Error())
+		return
+	}
+
+	resp, err := h.GRPCClient.Pizza().CreatePizzaType(ctx, &req)
+	if err != nil {
+		ctx.JSON(500, err.Error())
+		return
+	}
+
+	ctx.JSON(200, resp)
+}
+
 func (h *Handler) CreatePizza(ctx *gin.Context) {
 	var req pizza.CreatePizzaRequest
 

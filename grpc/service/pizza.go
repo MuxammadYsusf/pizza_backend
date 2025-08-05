@@ -12,6 +12,16 @@ const (
 	statusCanceled   = "canceled"
 )
 
+func (s *PizzaService) CreatePizzaType(ctx context.Context, req *pizza.CreatePizzaRequest) (*pizza.CreatePizzaResponse, error) {
+
+	resp, err := s.pizzaPostgres.Pizza().CreatePizza(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
+
 func (s *PizzaService) CreatePizza(ctx context.Context, req *pizza.CreatePizzaRequest) (*pizza.CreatePizzaResponse, error) {
 
 	resp, err := s.pizzaPostgres.Pizza().CreatePizza(ctx, req)

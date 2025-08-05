@@ -16,6 +16,7 @@ type pizzas struct {
 
 type PizzaRepo interface {
 	CreatePizza(ctx context.Context, req *pizza.CreatePizzaRequest) (*pizza.CreatePizzaResponse, error)
+	CreatePizzaType(ctx context.Context, req *pizza.CreatePizzaRequest) (*pizza.CreatePizzaResponse, error)
 	GetPizzaById(ctx context.Context, req *pizza.GetPizzaByIdRequest) (*pizza.GetPizzaByIdResponse, error)
 	GetPizzas(ctx context.Context, req *pizza.GetPizzasRequest) (*pizza.GetPizzasResponse, error)
 	UpdatePizza(ctx context.Context, req *pizza.UpdatePizzaRequest) (*pizza.UpdatePizzaResponse, error)
@@ -40,16 +41,33 @@ func NewPizza(db *sql.DB) PizzaRepo {
 	}
 }
 
+func (p *pizzas) CreatePizzaType(ctx context.Context, req *pizza.CreatePizzaRequest) (*pizza.CreatePizzaResponse, error) {
+
+	query := `INSERT INTO pizza(name, price, type_id) 
+	VALUES($1)`
+
+	_, err := p.db.Exec(
+		query,
+		req.Name,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pizza.CreatePizzaResponse{
+		Message: "success",
+	}, nil
+}
+
 func (p *pizzas) CreatePizza(ctx context.Context, req *pizza.CreatePizzaRequest) (*pizza.CreatePizzaResponse, error) {
 
-	query := `INSERT INTO pizza(name, price, id, type_id) 
-	VALUES($1, $2, $3, $4)`
+	query := `INSERT INTO pizza(name, price, type_id) 
+	VALUES($1, $2, $3)`
 
 	_, err := p.db.Exec(
 		query,
 		req.Name,
 		req.Price,
-		req.Id,
 		req.TypeId,
 	)
 	if err != nil {

@@ -109,7 +109,7 @@ func (a *auth) Login(ctx context.Context, req *session.LoginRequest) (*session.L
 
 	query := `SELECT id, name, password, role FROM users WHERE name = $1`
 
-	err := a.db.QueryRow(query, req.Username, req.Password).Scan(&user.ID, &user.Username, &user.Password, &user.Role)
+	err := a.db.QueryRow(query, req.Username).Scan(&user.ID, &user.Username, &user.Password, &user.Role)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("user not found")
@@ -124,6 +124,7 @@ func (a *auth) Login(ctx context.Context, req *session.LoginRequest) (*session.L
 	return &session.LoginResponse{
 		Message: "success",
 		UserId:  int32(user.ID),
+		Role:    user.Role,
 	}, nil
 }
 

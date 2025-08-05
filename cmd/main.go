@@ -42,8 +42,8 @@ func main() {
 
 	r := gin.Default()
 
-	r.POST("/pizzas/login", cont.Login)
 	r.POST("/pizzas/register", cont.Register)
+	r.POST("/pizzas/login", cont.Login)
 
 	auth := r.Group("/", cont.AuthMiddleware)
 	{
@@ -58,7 +58,8 @@ func main() {
 
 	admin := r.Group("/admin", cont.AdminOnlyMiddleware)
 	{
-		admin.POST("/pizza/create", cont.CreatePizza)
+		admin.POST("/pizzas/create/type", cont.CreatePizzaType)
+		admin.POST("/pizzas/create", cont.CreatePizza)
 		admin.GET("/pizzas/get", cont.GetPizzas)
 		admin.GET("/pizzas/get/:typeId", cont.GetPizzaById)
 		admin.PUT("/pizzas/update/:id/:typeId", cont.UpdatePizza)

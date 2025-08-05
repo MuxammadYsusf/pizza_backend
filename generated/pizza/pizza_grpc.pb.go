@@ -20,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	PizzaService_CreatePizza_FullMethodName        = "/pizza.PizzaService/CreatePizza"
+	PizzaService_CreatePizzaType_FullMethodName    = "/pizza.PizzaService/CreatePizzaType"
 	PizzaService_GetPizzas_FullMethodName          = "/pizza.PizzaService/GetPizzas"
 	PizzaService_GetPizzaById_FullMethodName       = "/pizza.PizzaService/GetPizzaById"
 	PizzaService_UpdatePizza_FullMethodName        = "/pizza.PizzaService/UpdatePizza"
@@ -38,6 +39,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type PizzaServiceClient interface {
 	CreatePizza(ctx context.Context, in *CreatePizzaRequest, opts ...grpc.CallOption) (*CreatePizzaResponse, error)
+	CreatePizzaType(ctx context.Context, in *CreatePizzaRequest, opts ...grpc.CallOption) (*CreatePizzaResponse, error)
 	GetPizzas(ctx context.Context, in *GetPizzasRequest, opts ...grpc.CallOption) (*GetPizzasResponse, error)
 	GetPizzaById(ctx context.Context, in *GetPizzaByIdRequest, opts ...grpc.CallOption) (*GetPizzaByIdResponse, error)
 	UpdatePizza(ctx context.Context, in *UpdatePizzaRequest, opts ...grpc.CallOption) (*UpdatePizzaResponse, error)
@@ -63,6 +65,16 @@ func (c *pizzaServiceClient) CreatePizza(ctx context.Context, in *CreatePizzaReq
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CreatePizzaResponse)
 	err := c.cc.Invoke(ctx, PizzaService_CreatePizza_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *pizzaServiceClient) CreatePizzaType(ctx context.Context, in *CreatePizzaRequest, opts ...grpc.CallOption) (*CreatePizzaResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreatePizzaResponse)
+	err := c.cc.Invoke(ctx, PizzaService_CreatePizzaType_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -184,6 +196,7 @@ func (c *pizzaServiceClient) GetCartItemHistory(ctx context.Context, in *GetCarI
 // for forward compatibility.
 type PizzaServiceServer interface {
 	CreatePizza(context.Context, *CreatePizzaRequest) (*CreatePizzaResponse, error)
+	CreatePizzaType(context.Context, *CreatePizzaRequest) (*CreatePizzaResponse, error)
 	GetPizzas(context.Context, *GetPizzasRequest) (*GetPizzasResponse, error)
 	GetPizzaById(context.Context, *GetPizzaByIdRequest) (*GetPizzaByIdResponse, error)
 	UpdatePizza(context.Context, *UpdatePizzaRequest) (*UpdatePizzaResponse, error)
@@ -207,6 +220,9 @@ type UnimplementedPizzaServiceServer struct{}
 
 func (UnimplementedPizzaServiceServer) CreatePizza(context.Context, *CreatePizzaRequest) (*CreatePizzaResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreatePizza not implemented")
+}
+func (UnimplementedPizzaServiceServer) CreatePizzaType(context.Context, *CreatePizzaRequest) (*CreatePizzaResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreatePizzaType not implemented")
 }
 func (UnimplementedPizzaServiceServer) GetPizzas(context.Context, *GetPizzasRequest) (*GetPizzasResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetPizzas not implemented")
@@ -276,6 +292,24 @@ func _PizzaService_CreatePizza_Handler(srv interface{}, ctx context.Context, dec
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(PizzaServiceServer).CreatePizza(ctx, req.(*CreatePizzaRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PizzaService_CreatePizzaType_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreatePizzaRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PizzaServiceServer).CreatePizzaType(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PizzaService_CreatePizzaType_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PizzaServiceServer).CreatePizzaType(ctx, req.(*CreatePizzaRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -488,6 +522,10 @@ var PizzaService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreatePizza",
 			Handler:    _PizzaService_CreatePizza_Handler,
+		},
+		{
+			MethodName: "CreatePizzaType",
+			Handler:    _PizzaService_CreatePizzaType_Handler,
 		},
 		{
 			MethodName: "GetPizzas",
