@@ -107,7 +107,7 @@ func (a *auth) Login(ctx context.Context, req *session.LoginRequest) (*session.L
 
 	var user models.User
 
-	query := `SELECT id, name, password, role FROM users WHERE name = $1 AND password = $2`
+	query := `SELECT id, name, password, role FROM users WHERE name = $1`
 
 	err := a.db.QueryRow(query, req.Username, req.Password).Scan(&user.ID, &user.Username, &user.Password, &user.Role)
 	if err != nil {
