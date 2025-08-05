@@ -145,3 +145,23 @@ func (s *PizzaService) OrderPizza(ctx context.Context, req *pizza.OrderPizzaRequ
 
 	return resp, nil
 }
+
+func (s *PizzaService) GetCartHistory(ctx context.Context, req *pizza.GetCartHistoryRequest) (*pizza.GetCartHistoryResponse, error) {
+
+	resp, err := s.pizzaPostgres.Pizza().GetCartrHistory(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
+
+func (s *PizzaService) GetCartItemHistory(ctx context.Context, req *pizza.GetCarItemtHistoryRequest) (*pizza.GetCarItemtHistoryResponse, error) {
+
+	resp, err := s.pizzaPostgres.Pizza().GetCartItemHistory(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}

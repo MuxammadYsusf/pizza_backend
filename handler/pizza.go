@@ -132,3 +132,29 @@ func (h *Handler) OrderPizza(ctx *gin.Context) {
 
 	ctx.JSON(200, resp)
 }
+
+func (h *Handler) GetCartHistory(ctx *gin.Context) {
+
+	resp, err := h.GRPCClient.Pizza().GetUserHistory(ctx, &pizza.GetCartHistoryRequest{})
+	if err != nil {
+		ctx.JSON(500, err.Error())
+		return
+	}
+
+	ctx.JSON(200, resp)
+}
+
+func (h *Handler) GetCartItemHistory(ctx *gin.Context) {
+
+	id := ctx.GetInt("id")
+
+	resp, err := h.GRPCClient.Pizza().GetCartItemHistory(ctx, &pizza.GetCarItemtHistoryRequest{
+		CartHistoryId: int32(id),
+	})
+	if err != nil {
+		ctx.JSON(500, err.Error())
+		return
+	}
+
+	ctx.JSON(200, resp)
+}

@@ -41,3 +41,11 @@ type CartItems struct {
 	Quantity    int32   `json:"quantity"`
 	TotalCost   float32 `json:"totalCost"`
 }
+
+type CartIeamHistory struct {
+	ID          int32   `json:"id"`
+	PizzaId     int32   `json:"pizzaId"`
+	PizzaTypeId int32   `json:"pizzaTypeId"`
+	Cost        float32 `json:"cost"`
+	Quantity    int32   `json:"quantity"`
+}

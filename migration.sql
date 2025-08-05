@@ -58,19 +58,3 @@ CREATE TABLE IF NOT EXISTS cart_item (
     FOREIGN KEY (pizza_id) REFERENCES pizza(id),
     FOREIGN KEY (pizza_type_id) REFERENCES types(id)
 );
-
-CREATE TABLE IF NOT EXISTS history (
-    id SERIAL PRIMARY KEY,
-    user_id INT NOT NULL,
-    is_active BOOLEAN NOT NULL,
-    total_cost FLOAT NOT NULL,
-    pizza_id INT NOT NULL,
-    pizza_type_id INT NOT NULL,
-    cost INT NOT NULL,
-    cart_id INT NOT NULL,
-    quantity INT NOT NULL,
-    FOREIGN KEY (cart_id) REFERENCES cart(id),
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (pizza_id) REFERENCES pizza(id),
-    FOREIGN KEY (pizza_type_id) REFERENCES types(id)
-);

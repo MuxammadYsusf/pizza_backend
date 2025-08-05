@@ -15,8 +15,9 @@ service PizzaService{
     rpc Cart(CartRequest) returns (CartResponse);
     rpc CheckIsOrdered(CheckIsOrderedRequest) returns (CheckIsOrderedResponse);
     rpc OrderPizza(OrderPizzaRequest) returns (OrderPizzaResponse);
-    rpc GetUserHistory(GetUserHistoryRequest) returns (GetUserHistoryResponse);
     rpc UpdatePizzaInCart(CartItems) returns (CartItemsResp);
+    rpc GetUserHistory(GetCartHistoryRequest) returns (GetCartHistoryResponse);
+    rpc GetCartItemHistory(GetCarItemtHistoryRequest) returns (GetCarItemtHistoryResponse);
 }
 
 message CreatePizzaRequest {
@@ -134,11 +135,6 @@ message OrderPizzaResponse {
     string message = 1;
 }
 
-message GetUserHistoryRequest {
-    int32 id = 1;
-    int32 userId = 2;
-}
-
 message CartItems {
     float totalCost = 1;
     int32 cartItemId = 2;
@@ -159,17 +155,30 @@ message CartItemsResp {
     float cost = 5; 
 }
 
-message GetUserHistoryResponse {
-    int32 id = 1;
+message GetCartHistoryRequest {
+    int32 cartId = 1;
     int32 userId = 2;
-    bool isActive = 3;
-    float totalCost = 4;
-    int32 cartItemId = 5;
-    int32 pizzaId = 6;
-    int32 pizzaTypeId = 7;
-    float cost = 8;
-    int32 quantity = 9;
-    int32 cartId = 10; 
+}
+
+message GetCartHistoryResponse {
+    int32 cartId = 1;
+    google.protobuf.Timestamp date = 2;
+    int32 userId = 3;
+    bool isActive = 4;
+    repeated GetCartHistoryResponse cartHistory = 5;
+}
+
+message GetCarItemtHistoryRequest {
+    int32 cartHistoryId = 1;
+}
+
+message GetCarItemtHistoryResponse {
+    int32 cartHistoryId = 1;
+    int32 pizzaId = 2;
+    int32 pizzaTypeId = 3;
+    float cost = 4;
+    int32 quantity = 5;
+    repeated GetCarItemtHistoryResponse cartHistory = 6;
 }
 
 

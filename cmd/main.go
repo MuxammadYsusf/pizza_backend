@@ -51,6 +51,8 @@ func main() {
 		auth.POST("/pizzas/cart", cont.PutPizzaIntoCart)
 		auth.POST("pizzas/order", cont.OrderPizza)
 		auth.PUT("pizzas/update_pizza", cont.UpdatePizzaInCart)
+		auth.GET("/history", cont.GetCartHistory)
+		auth.GET("/history/:id", cont.GetCartItemHistory)
 	}
 
 	admin := r.Group("/admin", cont.AdminOnlyMiddleware)
@@ -62,6 +64,8 @@ func main() {
 		admin.DELETE("/pizzas/:id", cont.DeletePizza)
 		admin.POST("/cart", cont.PutPizzaIntoCart)
 		admin.PUT("pizzas/update_pizza", cont.UpdatePizzaInCart)
+		admin.GET("/history", cont.GetCartHistory)
+		admin.GET("/history/:id", cont.GetCartItemHistory)
 	}
 
 	r.Run(cfg.HttpPort)

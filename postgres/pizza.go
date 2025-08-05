@@ -5,6 +5,9 @@ import (
 	"database/sql"
 	"github/http/copy/task4/generated/pizza"
 	"github/http/copy/task4/models"
+	"time"
+
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type pizzas struct {
@@ -27,6 +30,8 @@ type PizzaRepo interface {
 	CheckIsOrdered(ctx context.Context, req *pizza.CheckIsOrderedRequest) (*pizza.CheckIsOrderedResponse, error)
 	Order(ctx context.Context, req *pizza.OrderPizzaRequest) (*pizza.OrderPizzaResponse, error)
 	OrderItem(ctx context.Context, req *pizza.OrderPizzaRequest) (*pizza.OrderPizzaResponse, error)
+	GetCartrHistory(ctx context.Context, req *pizza.GetCartHistoryRequest) (*pizza.GetCartHistoryResponse, error)
+	GetCartItemHistory(ctx context.Context, req *pizza.GetCarItemtHistoryRequest) (*pizza.GetCarItemtHistoryResponse, error)
 }
 
 func NewPizza(db *sql.DB) PizzaRepo {
@@ -339,5 +344,64 @@ func (p *pizzas) OrderItem(ctx context.Context, req *pizza.OrderPizzaRequest) (*
 
 	return &pizza.OrderPizzaResponse{
 		Message: "success",
+	}, nil
+}
+
+func (p *pizzas) GetCartrHistory(ctx context.Context, req *pizza.GetCartHistoryRequest) (*pizza.GetCartHistoryResponse, error) {
+
+	query := `SELECT c.id, c.is_active, o.date
+          FROM cart AS c
+          INNER JOIN orders AS o ON o.cart_id = c.id
+          WHERE c.user_id = $1`
+
+	rows, err := p.db.Query(query, req.CartId, req.UserId)
+	if err != nil {
+		return nil, err
+	}
+
+	var cartHistory []*pizza.GetCartHistoryResponse
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var cartId int32
+		var isActive bool
+		var date time.Time
+		if err := rows.Scan(&cartId, &isActive, &date); err != nil {
+			return nil, err
+		}
+
+		cartHistory = append(cartHistory, &pizza.GetCartHistoryResponse{
+			CartId:   cartId,
+			IsActive: isActive,
+			Date:     timestamppb.New(date),
+		})
+	}
+
+	return &pizza.GetCartHistoryResponse{
+		CartHistory: cartHistory,
+	}, nil
+}
+
+func (p *pizzas) GetCartItemHistory(ctx context.Context, req *pizza.GetCarItemtHistoryRequest) (*pizza.GetCarItemtHistoryResponse, error) {
+
+	var cart models.CartIeamHistory
+
+	query := `SELECT ci.pizza_id, ci.pizza_type_id, ci.cost, ci.quantity, c.total_cost
+	FROM cart_item AS ci 
+	JOIN cart AS c ON c.id = ci.cart_id
+	WHERE c.id = $1`
+
+	err := p.db.QueryRow(query, req.CartHistoryId).Scan(&cart.PizzaId, &cart.PizzaTypeId, &cart.Cost, &cart.Quantity)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pizza.GetCarItemtHistoryResponse{
+		CartHistoryId: req.CartHistoryId,
+		PizzaId:       cart.PizzaId,
+		PizzaTypeId:   cart.PizzaTypeId,
+		Cost:          cart.Cost,
+		Quantity:      cart.Quantity,
 	}, nil
 }

@@ -19,17 +19,18 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	PizzaService_CreatePizza_FullMethodName       = "/pizza.PizzaService/CreatePizza"
-	PizzaService_GetPizzas_FullMethodName         = "/pizza.PizzaService/GetPizzas"
-	PizzaService_GetPizzaById_FullMethodName      = "/pizza.PizzaService/GetPizzaById"
-	PizzaService_UpdatePizza_FullMethodName       = "/pizza.PizzaService/UpdatePizza"
-	PizzaService_DeletePizza_FullMethodName       = "/pizza.PizzaService/DeletePizza"
-	PizzaService_CheckIsCartExist_FullMethodName  = "/pizza.PizzaService/CheckIsCartExist"
-	PizzaService_Cart_FullMethodName              = "/pizza.PizzaService/Cart"
-	PizzaService_CheckIsOrdered_FullMethodName    = "/pizza.PizzaService/CheckIsOrdered"
-	PizzaService_OrderPizza_FullMethodName        = "/pizza.PizzaService/OrderPizza"
-	PizzaService_GetUserHistory_FullMethodName    = "/pizza.PizzaService/GetUserHistory"
-	PizzaService_UpdatePizzaInCart_FullMethodName = "/pizza.PizzaService/UpdatePizzaInCart"
+	PizzaService_CreatePizza_FullMethodName        = "/pizza.PizzaService/CreatePizza"
+	PizzaService_GetPizzas_FullMethodName          = "/pizza.PizzaService/GetPizzas"
+	PizzaService_GetPizzaById_FullMethodName       = "/pizza.PizzaService/GetPizzaById"
+	PizzaService_UpdatePizza_FullMethodName        = "/pizza.PizzaService/UpdatePizza"
+	PizzaService_DeletePizza_FullMethodName        = "/pizza.PizzaService/DeletePizza"
+	PizzaService_CheckIsCartExist_FullMethodName   = "/pizza.PizzaService/CheckIsCartExist"
+	PizzaService_Cart_FullMethodName               = "/pizza.PizzaService/Cart"
+	PizzaService_CheckIsOrdered_FullMethodName     = "/pizza.PizzaService/CheckIsOrdered"
+	PizzaService_OrderPizza_FullMethodName         = "/pizza.PizzaService/OrderPizza"
+	PizzaService_UpdatePizzaInCart_FullMethodName  = "/pizza.PizzaService/UpdatePizzaInCart"
+	PizzaService_GetUserHistory_FullMethodName     = "/pizza.PizzaService/GetUserHistory"
+	PizzaService_GetCartItemHistory_FullMethodName = "/pizza.PizzaService/GetCartItemHistory"
 )
 
 // PizzaServiceClient is the client API for PizzaService service.
@@ -45,8 +46,9 @@ type PizzaServiceClient interface {
 	Cart(ctx context.Context, in *CartRequest, opts ...grpc.CallOption) (*CartResponse, error)
 	CheckIsOrdered(ctx context.Context, in *CheckIsOrderedRequest, opts ...grpc.CallOption) (*CheckIsOrderedResponse, error)
 	OrderPizza(ctx context.Context, in *OrderPizzaRequest, opts ...grpc.CallOption) (*OrderPizzaResponse, error)
-	GetUserHistory(ctx context.Context, in *GetUserHistoryRequest, opts ...grpc.CallOption) (*GetUserHistoryResponse, error)
 	UpdatePizzaInCart(ctx context.Context, in *CartItems, opts ...grpc.CallOption) (*CartItemsResp, error)
+	GetUserHistory(ctx context.Context, in *GetCartHistoryRequest, opts ...grpc.CallOption) (*GetCartHistoryResponse, error)
+	GetCartItemHistory(ctx context.Context, in *GetCarItemtHistoryRequest, opts ...grpc.CallOption) (*GetCarItemtHistoryResponse, error)
 }
 
 type pizzaServiceClient struct {
@@ -147,9 +149,19 @@ func (c *pizzaServiceClient) OrderPizza(ctx context.Context, in *OrderPizzaReque
 	return out, nil
 }
 
-func (c *pizzaServiceClient) GetUserHistory(ctx context.Context, in *GetUserHistoryRequest, opts ...grpc.CallOption) (*GetUserHistoryResponse, error) {
+func (c *pizzaServiceClient) UpdatePizzaInCart(ctx context.Context, in *CartItems, opts ...grpc.CallOption) (*CartItemsResp, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetUserHistoryResponse)
+	out := new(CartItemsResp)
+	err := c.cc.Invoke(ctx, PizzaService_UpdatePizzaInCart_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *pizzaServiceClient) GetUserHistory(ctx context.Context, in *GetCartHistoryRequest, opts ...grpc.CallOption) (*GetCartHistoryResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetCartHistoryResponse)
 	err := c.cc.Invoke(ctx, PizzaService_GetUserHistory_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -157,10 +169,10 @@ func (c *pizzaServiceClient) GetUserHistory(ctx context.Context, in *GetUserHist
 	return out, nil
 }
 
-func (c *pizzaServiceClient) UpdatePizzaInCart(ctx context.Context, in *CartItems, opts ...grpc.CallOption) (*CartItemsResp, error) {
+func (c *pizzaServiceClient) GetCartItemHistory(ctx context.Context, in *GetCarItemtHistoryRequest, opts ...grpc.CallOption) (*GetCarItemtHistoryResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CartItemsResp)
-	err := c.cc.Invoke(ctx, PizzaService_UpdatePizzaInCart_FullMethodName, in, out, cOpts...)
+	out := new(GetCarItemtHistoryResponse)
+	err := c.cc.Invoke(ctx, PizzaService_GetCartItemHistory_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -180,8 +192,9 @@ type PizzaServiceServer interface {
 	Cart(context.Context, *CartRequest) (*CartResponse, error)
 	CheckIsOrdered(context.Context, *CheckIsOrderedRequest) (*CheckIsOrderedResponse, error)
 	OrderPizza(context.Context, *OrderPizzaRequest) (*OrderPizzaResponse, error)
-	GetUserHistory(context.Context, *GetUserHistoryRequest) (*GetUserHistoryResponse, error)
 	UpdatePizzaInCart(context.Context, *CartItems) (*CartItemsResp, error)
+	GetUserHistory(context.Context, *GetCartHistoryRequest) (*GetCartHistoryResponse, error)
+	GetCartItemHistory(context.Context, *GetCarItemtHistoryRequest) (*GetCarItemtHistoryResponse, error)
 	mustEmbedUnimplementedPizzaServiceServer()
 }
 
@@ -219,11 +232,14 @@ func (UnimplementedPizzaServiceServer) CheckIsOrdered(context.Context, *CheckIsO
 func (UnimplementedPizzaServiceServer) OrderPizza(context.Context, *OrderPizzaRequest) (*OrderPizzaResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method OrderPizza not implemented")
 }
-func (UnimplementedPizzaServiceServer) GetUserHistory(context.Context, *GetUserHistoryRequest) (*GetUserHistoryResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetUserHistory not implemented")
-}
 func (UnimplementedPizzaServiceServer) UpdatePizzaInCart(context.Context, *CartItems) (*CartItemsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdatePizzaInCart not implemented")
+}
+func (UnimplementedPizzaServiceServer) GetUserHistory(context.Context, *GetCartHistoryRequest) (*GetCartHistoryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserHistory not implemented")
+}
+func (UnimplementedPizzaServiceServer) GetCartItemHistory(context.Context, *GetCarItemtHistoryRequest) (*GetCarItemtHistoryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCartItemHistory not implemented")
 }
 func (UnimplementedPizzaServiceServer) mustEmbedUnimplementedPizzaServiceServer() {}
 func (UnimplementedPizzaServiceServer) testEmbeddedByValue()                      {}
@@ -408,24 +424,6 @@ func _PizzaService_OrderPizza_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _PizzaService_GetUserHistory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetUserHistoryRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(PizzaServiceServer).GetUserHistory(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: PizzaService_GetUserHistory_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PizzaServiceServer).GetUserHistory(ctx, req.(*GetUserHistoryRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _PizzaService_UpdatePizzaInCart_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CartItems)
 	if err := dec(in); err != nil {
@@ -440,6 +438,42 @@ func _PizzaService_UpdatePizzaInCart_Handler(srv interface{}, ctx context.Contex
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(PizzaServiceServer).UpdatePizzaInCart(ctx, req.(*CartItems))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PizzaService_GetUserHistory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetCartHistoryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PizzaServiceServer).GetUserHistory(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PizzaService_GetUserHistory_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PizzaServiceServer).GetUserHistory(ctx, req.(*GetCartHistoryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PizzaService_GetCartItemHistory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetCarItemtHistoryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PizzaServiceServer).GetCartItemHistory(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PizzaService_GetCartItemHistory_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PizzaServiceServer).GetCartItemHistory(ctx, req.(*GetCarItemtHistoryRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -488,12 +522,16 @@ var PizzaService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _PizzaService_OrderPizza_Handler,
 		},
 		{
+			MethodName: "UpdatePizzaInCart",
+			Handler:    _PizzaService_UpdatePizzaInCart_Handler,
+		},
+		{
 			MethodName: "GetUserHistory",
 			Handler:    _PizzaService_GetUserHistory_Handler,
 		},
 		{
-			MethodName: "UpdatePizzaInCart",
-			Handler:    _PizzaService_UpdatePizzaInCart_Handler,
+			MethodName: "GetCartItemHistory",
+			Handler:    _PizzaService_GetCartItemHistory_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
