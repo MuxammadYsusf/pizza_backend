@@ -48,7 +48,9 @@ func main() {
 	{
 		auth.GET("/pizzas", cont.GetPizzas)
 		auth.GET("/pizzas/:id", cont.GetPizzaById)
-		auth.POST("/cart", cont.PutPizzaIntoCart)
+		auth.POST("/pizzas/cart", cont.PutPizzaIntoCart)
+		auth.POST("pizzas/order", cont.OrderPizza)
+		auth.PUT("pizzas/update_pizza", cont.UpdatePizzaInCart)
 	}
 
 	admin := r.Group("/admin", cont.AdminOnlyMiddleware)
@@ -56,9 +58,10 @@ func main() {
 		admin.POST("/pizza", cont.CreatePizza)
 		admin.GET("/pizzas", cont.GetPizzas)
 		admin.GET("/pizzas/:id", cont.GetPizzaById)
-		admin.PUT("/pizzas/:id", cont.UpdatePizza)
+		admin.PUT("/pizzas/update/:id", cont.UpdatePizza)
 		admin.DELETE("/pizzas/:id", cont.DeletePizza)
 		admin.POST("/cart", cont.PutPizzaIntoCart)
+		admin.PUT("pizzas/update_pizza", cont.UpdatePizzaInCart)
 	}
 
 	r.Run(cfg.HttpPort)
