@@ -10,11 +10,11 @@ type User struct {
 }
 
 type Pizza struct {
-	ID       int     `json:"id"`
+	ID       int32   `json:"id"`
 	Name     string  `json:"name"`
 	Price    float32 `json:"price"`
-	TypeId   int     `json:"typeId"`
-	Quantity int     `json:"quantity"`
+	TypeId   int32   `json:"typeId"`
+	Quantity int32   `json:"quantity"`
 }
 
 type Cart struct {

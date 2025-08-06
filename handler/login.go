@@ -13,13 +13,13 @@ func (h *Handler) Register(ctx *gin.Context) {
 	var reg session.RegisterRequest
 
 	if err := ctx.ShouldBindJSON(&reg); err != nil {
-		ctx.JSON(c.BadReq, gin.H{"error": err})
+		ctx.JSON(c.BadReq, gin.H{"error": err.Error()})
 		return
 	}
 
 	resp, err := h.GRPCClient.Login().Register(ctx, &reg)
 	if err != nil {
-		ctx.JSON(c.Err, gin.H{"error": err})
+		ctx.JSON(c.Err, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -31,19 +31,19 @@ func (h *Handler) Login(ctx *gin.Context) {
 	var l session.LoginRequest
 
 	if err := ctx.ShouldBindJSON(&l); err != nil {
-		ctx.JSON(c.BadReq, gin.H{"error": err})
+		ctx.JSON(c.BadReq, gin.H{"error": err.Error()})
 		return
 	}
 
 	resp, err := h.GRPCClient.Login().Login(ctx, &l)
 	if err != nil {
-		ctx.JSON(c.Err, gin.H{"error": err})
+		ctx.JSON(c.Err, gin.H{"error": err.Error()})
 		return
 	}
 
 	tokenStr, err := security.GenerateJWTToken(int(resp.UserId), resp.Role)
 	if err != nil {
-		ctx.JSON(c.Err, gin.H{"error": err})
+		ctx.JSON(c.Err, gin.H{"error": err.Error()})
 		return
 	}
 

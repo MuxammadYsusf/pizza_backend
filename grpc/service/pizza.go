@@ -5,6 +5,7 @@ import (
 	"fmt"
 	c "github/http/copy/task4/constants"
 	"github/http/copy/task4/generated/pizza"
+	"github/http/copy/task4/models"
 )
 
 func (s *PizzaService) CreatePizzaType(ctx context.Context, req *pizza.CreatePizzaRequest) (*pizza.CreatePizzaResponse, error) {
@@ -60,6 +61,7 @@ func (s *PizzaService) DeletePizza(ctx context.Context, req *pizza.DeletePizzaRe
 
 	resp, err := s.pizzaPostgres.Pizza().DeletePizza(ctx, req)
 	if err != nil {
+		fmt.Println("error", err)
 		return nil, err
 	}
 
@@ -72,22 +74,52 @@ func (s *PizzaService) Cart(ctx context.Context, req *pizza.CartRequest) (*pizza
 
 	exists, err := s.pizzaPostgres.Pizza().CheckIsCartExist(ctx, &pizza.CheckIsCartExistRequest{
 		UserId: req.UserId,
+		Id:     req.Id,
 	})
 	if err != nil {
 		return nil, err
 	}
-
 	if !exists.IsActive {
+		req.IsActive = true
+		req.TotalCost = 0
 		resp, err = s.pizzaPostgres.Pizza().Cart(ctx, req)
 		if err != nil {
 			return nil, err
 		}
 	}
+
 	resp = &pizza.CartResponse{
 		Message: "the cart already exists",
 	}
 
+	var items models.Pizza
+
+	items.ID = req.Items[0].PizzaId
+	items.TypeId = req.Items[0].PizzaTypeId
+	items.Quantity = req.Items[0].Quantity
+
+	req.PizzaId = items.ID
+	req.PizzaTypeId = items.TypeId
+	req.Quantity = items.Quantity
+
+	dataResp, err := s.pizzaPostgres.Pizza().GetPizzaCost(ctx, &pizza.CartItems{
+		UserId:  req.UserId,
+		PizzaId: req.PizzaId,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	newCost := dataResp.Cost * float32(req.Quantity)
+	req.Cost = newCost
+
 	_, err = s.pizzaPostgres.Pizza().CartItems(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println("card id::", req.GetId())
+
+	_, err = s.pizzaPostgres.Pizza().UpdateTotalCost(ctx, req.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +150,7 @@ func (s *PizzaService) UpdatePizzaInCart(ctx context.Context, req *pizza.CartIte
 		return nil, err
 	}
 
-	_, err = s.pizzaPostgres.Pizza().UpdateTotalCost(ctx, req)
+	_, err = s.pizzaPostgres.Pizza().UpdateTotalCost(ctx, req.Id)
 	if err != nil {
 		return nil, err
 	}

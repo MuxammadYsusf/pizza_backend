@@ -55,11 +55,10 @@ message GetPizzaByIdResponse {
 }
 
 message UpdatePizzaRequest {
-    string name = 1;
-    string description = 2;
-    float price = 3;
-    int32 id = 4;
-    int32 typeId = 5;
+    int32 id = 1;
+    int32 typeId = 2;
+    string name = 3;
+    float price = 4;
 }
 
 message UpdatePizzaResponse {
@@ -99,7 +98,8 @@ message CartRequest {
     int32 pizzaTypeId = 7;
     float cost = 8;
     int32 quantity = 9;
-    int32 cartId = 10;   
+    int32 cartId = 10;
+    repeated CartItems items = 11;
 }
 
 message CartResponse {

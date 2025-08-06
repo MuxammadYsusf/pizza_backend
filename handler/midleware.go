@@ -2,7 +2,6 @@ package handler
 
 import (
 	"errors"
-	"fmt"
 	"github/http/copy/task4/config"
 	c "github/http/copy/task4/constants"
 	"github/http/copy/task4/security"
@@ -18,7 +17,7 @@ func (h *Handler) AuthMiddleware(ctx *gin.Context) {
 	}
 
 	authHeader := ctx.GetHeader("Authorization")
-	if authHeader != "" {
+	if authHeader == "" {
 		ctx.JSON(c.UnAuth, "unauthorized")
 		return
 	}
@@ -37,8 +36,6 @@ func (h *Handler) AuthMiddleware(ctx *gin.Context) {
 		}
 		return config.Cfg().JWTsecretkey, nil
 	})
-
-	fmt.Println("token", token)
 
 	if err != nil || !token.Valid {
 		ctx.JSON(c.UnAuth, gin.H{"error": "unauthorized"})
