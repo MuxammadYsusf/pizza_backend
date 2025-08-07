@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"github/http/copy/task4/generated/pizza"
 	"github/http/copy/task4/models"
 )
@@ -66,8 +65,6 @@ func (s *PizzaService) Cart(ctx context.Context, req *pizza.CartRequest) (*pizza
 }
 
 func (s *PizzaService) IncreaseAmountOfPizza(ctx context.Context, req *pizza.CartItems) (*pizza.CartItemsResp, error) {
-
-	fmt.Println("HI")
 
 	cart, err := s.pizzaPostgres.Cart().GetFromCart(ctx, req)
 	if err != nil {

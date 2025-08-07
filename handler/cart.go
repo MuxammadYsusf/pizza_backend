@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	c "github/http/copy/task4/constants"
 	"github/http/copy/task4/generated/pizza"
 	"strconv"
@@ -63,8 +62,6 @@ func (h *Handler) IncreasePizzaInCart(ctx *gin.Context) {
 		return
 	}
 
-	fmt.Println("LOOK AT HERE!!!")
-
 	resp, err := h.GRPCClient.Pizza().IncreaseAmountOfPizza(ctx, &pizza.CartItems{
 		PizzaId:     int32(pizzaId),
 		PizzaTypeId: int32(id),
@@ -84,8 +81,6 @@ func (h *Handler) DecreasePizzaInCart(ctx *gin.Context) {
 
 	id, _ := strconv.Atoi(idStr)
 	typeId, _ := strconv.Atoi(typeIdStr)
-
-	fmt.Printf("id: %d \ntypeId: %d\n", id, typeId)
 
 	resp, err := h.GRPCClient.Pizza().DeletePizza(ctx, &pizza.DeletePizzaRequest{
 		Id:     int32(id),
