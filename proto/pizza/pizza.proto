@@ -5,6 +5,10 @@ package pizza;
 option go_package = "generated/pizza";
 import "google/protobuf/timestamp.proto";
 
+// Advice: Right now, all pizza, cart, and order related RPCs are placed into a single PizzaService.
+// For better code organization, maintainability, and scalability, it's a good practice to split your proto into multiple services.
+// For example, you could create separate services like PizzaService (for pizza menu and types), CartService (for everything related to cart), and OrderService (for orders and order history).
+// This will make your API cleaner and each service will only contain relevant methods for its domain.
 service PizzaService{
     rpc CreatePizza(CreatePizzaRequest) returns (CreatePizzaResponse);
     rpc CreatePizzaType(CreatePizzaRequest) returns (CreatePizzaResponse);
