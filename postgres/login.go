@@ -39,7 +39,8 @@ func (a *auth) IsNameTaken(name string) (bool, error) {
 func (a *auth) IsEmailTaken(name string) (bool, error) {
 
 	var exists bool
-	err := a.db.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE email = $1)", name).Scan(&exists)
+	// Suggestion: parameter is named "name", but this function checks email. Consider renaming parameter to "email" for clarity.
+	err := a.db.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE email = $1)", name /* <-- Here */ ).Scan(&exists)
 	if err != nil {
 		return false, err
 	}
@@ -79,9 +80,11 @@ func (a *auth) Register(ctx context.Context, req *session.RegisterRequest) (*ses
 		tx.Rollback()
 		return nil, err
 	}
+	// Note: You assign the hashed password to req.Password,
+	// but it's not needed since you already use hashedPassword in Exec below.
 	req.Password = hashedPassword
 
-	defer tx.Commit()
+	// defer tx.Commit() <-- Suggestion: Remove this line, as it will commit immediately after the function returns, which is not what you want.
 
 	query := `INSERT INTO users(name, password, email, role)
 	VALUES($1, $2, $3, $4)`
@@ -89,12 +92,17 @@ func (a *auth) Register(ctx context.Context, req *session.RegisterRequest) (*ses
 	_, err = tx.Exec(
 		query,
 		req.Username,
-		hashedPassword,
+		hashedPassword, // <-- Here you use the hashed password directly.
 		req.Email,
 		req.Role,
 	)
 	if err != nil {
 		tx.Rollback()
+		return nil, err
+	}
+
+	// Suggestion: Commit only here, after all checks and inserts are successful.
+	if err := tx.Commit(); err != nil {
 		return nil, err
 	}
 
@@ -112,13 +120,15 @@ func (a *auth) Login(ctx context.Context, req *session.LoginRequest) (*session.L
 	err := a.db.QueryRow(query, req.Username).Scan(&user.ID, &user.Username, &user.Password, &user.Role)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("user not found")
+			// Security tip: For login errors, it's safer to always return a generic error like "invalid credentials"
+			// to avoid leaking info about which usernames exist.
+			return nil, fmt.Errorf("invalid name or password")
 		}
 		return nil, err
 	}
 
 	if !CheckPasswordHash(req.Password, user.Password) {
-		return nil, fmt.Errorf("invalid name or password")
+		return nil, fmt.Errorf("invalid name or password") // <-- Security tip: Same as above, avoid specific error messages.	
 	}
 
 	return &session.LoginResponse{
@@ -141,3 +151,5 @@ func CheckPasswordHash(password, hash string) bool {
 
 	return err == nil
 }
+
+// Great job!

@@ -16,6 +16,9 @@ type pizzas struct {
 	db *sql.DB
 }
 
+// Suggestion: Interface is too big and includes methods for pizza, cart, and order logic together.
+// It's usually better to split interfaces by responsibility (e.g. PizzaRepo, CartRepo, OrderRepo).
+// This will help with code readability and easier future support.
 type PizzaRepo interface {
 	CreatePizza(ctx context.Context, req *pizza.CreatePizzaRequest) (*pizza.CreatePizzaResponse, error)
 	CreatePizzaType(ctx context.Context, req *pizza.CreatePizzaRequest) (*pizza.CreatePizzaResponse, error)
@@ -142,6 +145,7 @@ func (p *pizzas) UpdatePizza(ctx context.Context, req *pizza.UpdatePizzaRequest)
 		req.Name,
 		req.Price,
 	)
+	// Suggestion: Remove debug prints like this from production code, use a logger if you need to log something.
 	fmt.Printf("req : %+v\n\n", req)
 	if err != nil {
 		fmt.Println("error", err)
@@ -189,6 +193,7 @@ func (p *pizzas) CheckIsCartExist(ctx context.Context, req *pizza.CheckIsCartExi
 
 	err := p.db.QueryRow(query, req.Id, req.UserId).Scan(&cart.IsActive)
 	if err != nil {
+		// Suggestion: remove debug prints before production, they may leak info to logs.
 		fmt.Println("cart.IsActive -->", cart.IsActive)
 		fmt.Println("id -->", req.Id)
 		fmt.Println("userId -->", req.UserId)
@@ -212,6 +217,7 @@ func (p *pizzas) Cart(ctx context.Context, req *pizza.CartRequest) (*pizza.CartR
 		req.IsActive,
 		req.TotalCost,
 	)
+	// Debug print, remove before production.
 	fmt.Printf("[UserId: %d] [IsActive: %t] [TotalCost: %f]\n", req.UserId, req.IsActive, req.TotalCost)
 	if err != nil {
 		return nil, err
@@ -254,6 +260,7 @@ func (p *pizzas) GetPizzaCost(ctx context.Context, req *pizza.CartItems) (*pizza
 
 	err := p.db.QueryRow(query, req.PizzaId).Scan(&items.Cost)
 	if err != nil {
+		// Debug print, remove before production.
 		fmt.Println("HIHIHIHA:", err)
 		return nil, err
 	}
@@ -268,14 +275,16 @@ func (p *pizzas) GetFromCart(ctx context.Context, req *pizza.CartItems) (*pizza.
 	query := `
     SELECT pizza_id, cart_id FROM cart_item WHERE id = $1
 `
-	err := p.db.QueryRow(query, req.Id).Scan(&req.PizzaId, &req.CartId)
+	// Tip: it's safer to use temporary variables with Scan instead of scanning directly into request struct (req).
+	var pizzaId, cartId int32
+	err := p.db.QueryRow(query, req.Id).Scan(&pizzaId, &cartId)
 	if err != nil {
 		return nil, err
 	}
 
 	return &pizza.CartItemsResp{
-		CartId:  req.CartId,
-		PizzaId: req.PizzaId,
+		CartId:  cartId,
+		PizzaId: pizzaId,
 	}, nil
 }
 
@@ -284,6 +293,7 @@ func (p *pizzas) GetFromPizza(ctx context.Context, req *pizza.CartItems) (*pizza
 	query := `
     SELECT cost FROM pizza WHERE id = $1
 `
+	// Tip: use a variable instead of scanning directly into req.
 	err := p.db.QueryRow(query, req.PizzaId).Scan(&req.Cost)
 	if err != nil {
 		return nil, err
@@ -296,6 +306,7 @@ func (p *pizzas) GetFromPizza(ctx context.Context, req *pizza.CartItems) (*pizza
 
 func (p *pizzas) IncreaseAmountOfPizza(ctx context.Context, req *pizza.CartItems) (*pizza.CartItemsResp, error) {
 
+	// Typo warning: "piazza_id" should be "pizza_id" in the SQL query.
 	query := `UPDATE cart_item SET quantity = $3, cost = $4 WHERE id = $1 AND piazza_id = $2`
 
 	tx, err := p.db.Begin()
@@ -314,6 +325,8 @@ func (p *pizzas) IncreaseAmountOfPizza(ctx context.Context, req *pizza.CartItems
 		tx.Rollback()
 		return nil, err
 	}
+
+	// Important: You should call tx.Commit() after successful Exec, otherwise changes won't be saved.
 
 	return &pizza.CartItemsResp{
 		Message: "success",
@@ -455,6 +468,7 @@ func (p *pizzas) GetCartrHistory(ctx context.Context, req *pizza.GetCartHistoryR
           INNER JOIN orders AS o ON o.cart_id = c.id
           WHERE c.user_id = $1`
 
+	// Warning: You are passing two parameters (req.CartId, req.UserId), but the query expects only one ($1).
 	rows, err := p.db.Query(query, req.CartId, req.UserId)
 	if err != nil {
 		return nil, err
@@ -493,6 +507,7 @@ func (p *pizzas) GetCartItemHistory(ctx context.Context, req *pizza.GetCarItemtH
 	JOIN cart AS c ON c.id = ci.cart_id
 	WHERE c.id = $1`
 
+	// Note: The query selects 5 columns, but you scan only 4 variables. Add a variable for the 5th column or use _ to ignore it.
 	err := p.db.QueryRow(query, req.CartHistoryId).Scan(&cart.PizzaId, &cart.PizzaTypeId, &cart.Cost, &cart.Quantity)
 	if err != nil {
 		return nil, err
@@ -506,3 +521,6 @@ func (p *pizzas) GetCartItemHistory(ctx context.Context, req *pizza.GetCarItemtH
 		Quantity:      cart.Quantity,
 	}, nil
 }
+
+// General tip: Always try to keep your code clean from debug prints in production, for local development you can use a logger. 
+// Keep variable and method names typo-free (typo-free means no spelling mistakes), and keep an eye on SQL query parameters and Scan argument counts for reliability.

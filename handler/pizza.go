@@ -9,6 +9,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// Again, split your code into different files (orders, cart etc).
+// This will make your code cleaner and easier to read.
+
 func (h *Handler) CreatePizzaType(ctx *gin.Context) {
 	var req pizza.CreatePizzaRequest
 
@@ -54,13 +57,16 @@ func (h *Handler) GetPizzas(ctx *gin.Context) {
 	ctx.JSON(200, resp)
 }
 
+// Suggestion: In GetPizzaById, DeletePizza you use strconv.Atoi without handling the error.
+// If a user passes a non-numeric id, your handler will use id = 0, which may cause confusion or unwanted behavior.
+// It's safer to check the error and return a Bad Request if parsing fails.
 func (h *Handler) GetPizzaById(ctx *gin.Context) {
 
 	idStr := ctx.Param("id")
 	typeIdStr := ctx.Param("typeId")
 
-	id, _ := strconv.Atoi(idStr)
-	typeId, _ := strconv.Atoi(typeIdStr)
+	id, _ := strconv.Atoi(idStr) // <-- Handle the error here.
+	typeId, _ := strconv.Atoi(typeIdStr) // <-- Handle the error here.
 
 	resp, err := h.GRPCClient.Pizza().GetPizzaById(ctx, &pizza.GetPizzaByIdRequest{
 		Id:     int32(id),
@@ -97,8 +103,8 @@ func (h *Handler) DeletePizza(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	typeIdStr := ctx.Param("typeId")
 
-	id, _ := strconv.Atoi(idStr)
-	typeId, _ := strconv.Atoi(typeIdStr)
+	id, _ := strconv.Atoi(idStr) // <-- Handle the error here.
+	typeId, _ := strconv.Atoi(typeIdStr) // <-- Handle the error here.
 
 	fmt.Printf("id: %d \ntypeId: %d\n", id, typeId)
 
@@ -134,7 +140,7 @@ func (h *Handler) PutPizzaIntoCart(ctx *gin.Context) {
 	}
 
 	idStr := ctx.Param("id")
-	req.Id, _ = strconv.Atoi(idStr)
+	req.Id, _ = strconv.Atoi(idStr) // <-- Handle the error here.
 
 	resp, err := h.GRPCClient.Pizza().Cart(ctx, &pizza.CartRequest{
 		Items:  req.Items,
@@ -142,7 +148,7 @@ func (h *Handler) PutPizzaIntoCart(ctx *gin.Context) {
 		Id:     int32(req.Id),
 	})
 	if err != nil {
-		fmt.Println("err:", err)
+		fmt.Println("err:", err) // <-- Avoid debug prints, use a logger if needed.
 		ctx.JSON(c.Err, gin.H{"error": err.Error()})
 		return
 	}
