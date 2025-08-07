@@ -48,4 +48,5 @@ type CartIeamHistory struct {
 	PizzaTypeId int32   `json:"pizzaTypeId"`
 	Cost        float32 `json:"cost"`
 	Quantity    int32   `json:"quantity"`
+	TotalCost   float32 `json:"totalCost"`
 }

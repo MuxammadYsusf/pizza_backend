@@ -16,35 +16,57 @@ type pizzas struct {
 	db *sql.DB
 }
 
-// Suggestion: Interface is too big and includes methods for pizza, cart, and order logic together.
-// It's usually better to split interfaces by responsibility (e.g. PizzaRepo, CartRepo, OrderRepo).
-// This will help with code readability and easier future support.
+type cart struct {
+	db *sql.DB
+}
+
+type orders struct {
+	db *sql.DB
+}
+
 type PizzaRepo interface {
-	CreatePizza(ctx context.Context, req *pizza.CreatePizzaRequest) (*pizza.CreatePizzaResponse, error)
 	CreatePizzaType(ctx context.Context, req *pizza.CreatePizzaRequest) (*pizza.CreatePizzaResponse, error)
+	CreatePizza(ctx context.Context, req *pizza.CreatePizzaRequest) (*pizza.CreatePizzaResponse, error)
 	GetPizzaById(ctx context.Context, req *pizza.GetPizzaByIdRequest) (*pizza.GetPizzaByIdResponse, error)
 	GetPizzas(ctx context.Context, req *pizza.GetPizzasRequest) (*pizza.GetPizzasResponse, error)
 	UpdatePizza(ctx context.Context, req *pizza.UpdatePizzaRequest) (*pizza.UpdatePizzaResponse, error)
 	DeletePizza(ctx context.Context, req *pizza.DeletePizzaRequest) (*pizza.DeletePizzaResponse, error)
-	CheckIsCartExist(ctx context.Context, req *pizza.CheckIsCartExistRequest) (*pizza.CheckIsCartExistResponse, error)
+	GetPizzaCost(ctx context.Context, req *pizza.CartItems) (*pizza.CartItemsResp, error)
+}
+
+type CartRepo interface {
 	Cart(ctx context.Context, req *pizza.CartRequest) (*pizza.CartResponse, error)
 	CartItems(ctx context.Context, req *pizza.CartRequest) (*pizza.CartResponse, error)
-	GetPizzaCost(ctx context.Context, req *pizza.CartItems) (*pizza.CartItemsResp, error)
 	GetFromCart(ctx context.Context, req *pizza.CartItems) (*pizza.CartItemsResp, error)
-	GetFromPizza(ctx context.Context, req *pizza.CartItems) (*pizza.CartItemsResp, error)
+	CheckIsCartExist(ctx context.Context, req *pizza.CheckIsCartExistRequest) (*pizza.CheckIsCartExistResponse, error)
 	IncreaseAmountOfPizza(ctx context.Context, req *pizza.CartItems) (*pizza.CartItemsResp, error)
 	IncreaseTotalCost(ctx context.Context, id int32) (*pizza.CartItemsResp, error)
 	DecreaseAmountOfPizza(ctx context.Context, req *pizza.CartItems) (*pizza.CartItemsResp, error)
 	DecreaseTotalCost(ctx context.Context, id int32) (*pizza.CartItemsResp, error)
-	CheckIsOrdered(ctx context.Context, req *pizza.CheckIsOrderedRequest) (*pizza.CheckIsOrderedResponse, error)
-	Order(ctx context.Context, req *pizza.OrderPizzaRequest) (*pizza.OrderPizzaResponse, error)
-	OrderItem(ctx context.Context, req *pizza.OrderPizzaRequest) (*pizza.OrderPizzaResponse, error)
 	GetCartrHistory(ctx context.Context, req *pizza.GetCartHistoryRequest) (*pizza.GetCartHistoryResponse, error)
 	GetCartItemHistory(ctx context.Context, req *pizza.GetCarItemtHistoryRequest) (*pizza.GetCarItemtHistoryResponse, error)
 }
 
+type OrderRepo interface {
+	Order(ctx context.Context, req *pizza.OrderPizzaRequest) (*pizza.OrderPizzaResponse, error)
+	OrderItem(ctx context.Context, req *pizza.OrderPizzaRequest) (*pizza.OrderPizzaResponse, error)
+	CheckIsOrdered(ctx context.Context, req *pizza.CheckIsOrderedRequest) (*pizza.CheckIsOrderedResponse, error)
+}
+
 func NewPizza(db *sql.DB) PizzaRepo {
 	return &pizzas{
+		db: db,
+	}
+}
+
+func NewCart(db *sql.DB) CartRepo {
+	return &cart{
+		db: db,
+	}
+}
+
+func NewOrder(db *sql.DB) OrderRepo {
+	return &orders{
 		db: db,
 	}
 }
@@ -145,10 +167,8 @@ func (p *pizzas) UpdatePizza(ctx context.Context, req *pizza.UpdatePizzaRequest)
 		req.Name,
 		req.Price,
 	)
-	// Suggestion: Remove debug prints like this from production code, use a logger if you need to log something.
-	fmt.Printf("req : %+v\n\n", req)
+
 	if err != nil {
-		fmt.Println("error", err)
 		return nil, err
 	}
 
@@ -186,17 +206,13 @@ func (p *pizzas) DeletePizza(ctx context.Context, req *pizza.DeletePizzaRequest)
 	}, nil
 }
 
-func (p *pizzas) CheckIsCartExist(ctx context.Context, req *pizza.CheckIsCartExistRequest) (*pizza.CheckIsCartExistResponse, error) {
+func (c *cart) CheckIsCartExist(ctx context.Context, req *pizza.CheckIsCartExistRequest) (*pizza.CheckIsCartExistResponse, error) {
 	var cart models.Cart
 
 	query := `SELECT is_active FROM cart WHERE id = $1 AND user_id = $2`
 
-	err := p.db.QueryRow(query, req.Id, req.UserId).Scan(&cart.IsActive)
+	err := c.db.QueryRow(query, req.Id, req.UserId).Scan(&cart.IsActive)
 	if err != nil {
-		// Suggestion: remove debug prints before production, they may leak info to logs.
-		fmt.Println("cart.IsActive -->", cart.IsActive)
-		fmt.Println("id -->", req.Id)
-		fmt.Println("userId -->", req.UserId)
 		return nil, err
 	}
 
@@ -206,19 +222,17 @@ func (p *pizzas) CheckIsCartExist(ctx context.Context, req *pizza.CheckIsCartExi
 	}, nil
 }
 
-func (p *pizzas) Cart(ctx context.Context, req *pizza.CartRequest) (*pizza.CartResponse, error) {
+func (c *cart) Cart(ctx context.Context, req *pizza.CartRequest) (*pizza.CartResponse, error) {
 
 	query := `INSERT INTO cart(user_id, is_active, total_cost) 
 	VALUES($1, $2, $3)`
 
-	_, err := p.db.Exec(
+	_, err := c.db.Exec(
 		query,
 		req.UserId,
 		req.IsActive,
 		req.TotalCost,
 	)
-	// Debug print, remove before production.
-	fmt.Printf("[UserId: %d] [IsActive: %t] [TotalCost: %f]\n", req.UserId, req.IsActive, req.TotalCost)
 	if err != nil {
 		return nil, err
 	}
@@ -228,12 +242,12 @@ func (p *pizzas) Cart(ctx context.Context, req *pizza.CartRequest) (*pizza.CartR
 	}, nil
 }
 
-func (p *pizzas) CartItems(ctx context.Context, req *pizza.CartRequest) (*pizza.CartResponse, error) {
+func (c *cart) CartItems(ctx context.Context, req *pizza.CartRequest) (*pizza.CartResponse, error) {
 
 	query := `INSERT INTO cart_item(pizza_id, pizza_type_id, cost, cart_id, quantity)
 	VALUES($1, $2, $3, $4, $5)`
 
-	_, err := p.db.Exec(
+	_, err := c.db.Exec(
 		query,
 		req.PizzaId,
 		req.PizzaTypeId,
@@ -260,8 +274,6 @@ func (p *pizzas) GetPizzaCost(ctx context.Context, req *pizza.CartItems) (*pizza
 
 	err := p.db.QueryRow(query, req.PizzaId).Scan(&items.Cost)
 	if err != nil {
-		// Debug print, remove before production.
-		fmt.Println("HIHIHIHA:", err)
 		return nil, err
 	}
 
@@ -270,14 +282,14 @@ func (p *pizzas) GetPizzaCost(ctx context.Context, req *pizza.CartItems) (*pizza
 	}, nil
 }
 
-func (p *pizzas) GetFromCart(ctx context.Context, req *pizza.CartItems) (*pizza.CartItemsResp, error) {
+func (c *cart) GetFromCart(ctx context.Context, req *pizza.CartItems) (*pizza.CartItemsResp, error) {
 
 	query := `
     SELECT pizza_id, cart_id FROM cart_item WHERE id = $1
 `
 	// Tip: it's safer to use temporary variables with Scan instead of scanning directly into request struct (req).
 	var pizzaId, cartId int32
-	err := p.db.QueryRow(query, req.Id).Scan(&pizzaId, &cartId)
+	err := c.db.QueryRow(query, req.Id).Scan(&pizzaId, &cartId)
 	if err != nil {
 		return nil, err
 	}
@@ -288,28 +300,11 @@ func (p *pizzas) GetFromCart(ctx context.Context, req *pizza.CartItems) (*pizza.
 	}, nil
 }
 
-func (p *pizzas) GetFromPizza(ctx context.Context, req *pizza.CartItems) (*pizza.CartItemsResp, error) {
+func (c *cart) IncreaseAmountOfPizza(ctx context.Context, req *pizza.CartItems) (*pizza.CartItemsResp, error) {
 
-	query := `
-    SELECT cost FROM pizza WHERE id = $1
-`
-	// Tip: use a variable instead of scanning directly into req.
-	err := p.db.QueryRow(query, req.PizzaId).Scan(&req.Cost)
-	if err != nil {
-		return nil, err
-	}
+	query := `UPDATE cart_item SET quantity = $3, cost = $4 WHERE id = $1 AND pizza_id = $2`
 
-	return &pizza.CartItemsResp{
-		Cost: req.Cost,
-	}, nil
-}
-
-func (p *pizzas) IncreaseAmountOfPizza(ctx context.Context, req *pizza.CartItems) (*pizza.CartItemsResp, error) {
-
-	// Typo warning: "piazza_id" should be "pizza_id" in the SQL query.
-	query := `UPDATE cart_item SET quantity = $3, cost = $4 WHERE id = $1 AND piazza_id = $2`
-
-	tx, err := p.db.Begin()
+	tx, err := c.db.Begin()
 	if err != nil {
 		return nil, err
 	}
@@ -326,14 +321,14 @@ func (p *pizzas) IncreaseAmountOfPizza(ctx context.Context, req *pizza.CartItems
 		return nil, err
 	}
 
-	// Important: You should call tx.Commit() after successful Exec, otherwise changes won't be saved.
+	tx.Commit()
 
 	return &pizza.CartItemsResp{
 		Message: "success",
 	}, nil
 }
 
-func (p *pizzas) IncreaseTotalCost(ctx context.Context, id int32) (*pizza.CartItemsResp, error) {
+func (c *cart) IncreaseTotalCost(ctx context.Context, id int32) (*pizza.CartItemsResp, error) {
 	query := `
 	UPDATE cart
 	SET total_cost = (
@@ -343,7 +338,7 @@ func (p *pizzas) IncreaseTotalCost(ctx context.Context, id int32) (*pizza.CartIt
 	)
 	WHERE id = $1;
 	`
-	_, err := p.db.Exec(
+	_, err := c.db.Exec(
 		query,
 		id,
 	)
@@ -356,7 +351,7 @@ func (p *pizzas) IncreaseTotalCost(ctx context.Context, id int32) (*pizza.CartIt
 	}, nil
 }
 
-func (p *pizzas) DecreaseAmountOfPizza(ctx context.Context, req *pizza.CartItems) (*pizza.CartItemsResp, error) {
+func (c *cart) DecreaseAmountOfPizza(ctx context.Context, req *pizza.CartItems) (*pizza.CartItemsResp, error) {
 
 	var query string
 
@@ -371,7 +366,7 @@ func (p *pizzas) DecreaseAmountOfPizza(ctx context.Context, req *pizza.CartItems
 	} else {
 		return nil, errors.New("this pizza is bot exists in your cart")
 	}
-	_, err := p.db.Exec(
+	_, err := c.db.Exec(
 		query,
 		req.Id,
 	)
@@ -384,13 +379,13 @@ func (p *pizzas) DecreaseAmountOfPizza(ctx context.Context, req *pizza.CartItems
 	}, nil
 }
 
-func (p *pizzas) DecreaseTotalCost(ctx context.Context, userId int32) (*pizza.CartItemsResp, error) {
+func (c *cart) DecreaseTotalCost(ctx context.Context, userId int32) (*pizza.CartItemsResp, error) {
 	query := `
 	UPDATE cart
 	SET id = $1
 	WHERE user_id = $1;
 	`
-	_, err := p.db.Exec(
+	_, err := c.db.Exec(
 		query,
 		userId,
 	)
@@ -403,12 +398,12 @@ func (p *pizzas) DecreaseTotalCost(ctx context.Context, userId int32) (*pizza.Ca
 	}, nil
 }
 
-func (p *pizzas) CheckIsOrdered(ctx context.Context, req *pizza.CheckIsOrderedRequest) (*pizza.CheckIsOrderedResponse, error) {
+func (o *orders) CheckIsOrdered(ctx context.Context, req *pizza.CheckIsOrderedRequest) (*pizza.CheckIsOrderedResponse, error) {
 	var cart models.Order
 
 	query := `SELECT is_ordered, status FROM orders WHERE id = $1 AND user_id = $2`
 
-	err := p.db.QueryRow(query, req.Id, req.UserId).Scan(&cart.IsOrdered, &cart.Status)
+	err := o.db.QueryRow(query, req.Id, req.UserId).Scan(&cart.IsOrdered, &cart.Status)
 	if err != nil {
 		return nil, err
 	}
@@ -419,12 +414,12 @@ func (p *pizzas) CheckIsOrdered(ctx context.Context, req *pizza.CheckIsOrderedRe
 	}, nil
 }
 
-func (p *pizzas) Order(ctx context.Context, req *pizza.OrderPizzaRequest) (*pizza.OrderPizzaResponse, error) {
+func (o *orders) Order(ctx context.Context, req *pizza.OrderPizzaRequest) (*pizza.OrderPizzaResponse, error) {
 
 	query := `INSERT INTO orders(date, is_ordered, user_id, status) 
 	VALUES($1, $2, $3, $4)`
 
-	_, err := p.db.Exec(
+	_, err := o.db.Exec(
 		query,
 		req.Date,
 		req.IsOrdered,
@@ -440,12 +435,12 @@ func (p *pizzas) Order(ctx context.Context, req *pizza.OrderPizzaRequest) (*pizz
 	}, nil
 }
 
-func (p *pizzas) OrderItem(ctx context.Context, req *pizza.OrderPizzaRequest) (*pizza.OrderPizzaResponse, error) {
+func (o *orders) OrderItem(ctx context.Context, req *pizza.OrderPizzaRequest) (*pizza.OrderPizzaResponse, error) {
 
 	query := `INSERT INTO order_item(pizza_id, pizza_type_id, cart_id, quantity) 
 	VALUES($1, $2, $3, $4)`
 
-	_, err := p.db.Exec(
+	_, err := o.db.Exec(
 		query,
 		req.PizzaId,
 		req.PizzaTypeId,
@@ -461,15 +456,14 @@ func (p *pizzas) OrderItem(ctx context.Context, req *pizza.OrderPizzaRequest) (*
 	}, nil
 }
 
-func (p *pizzas) GetCartrHistory(ctx context.Context, req *pizza.GetCartHistoryRequest) (*pizza.GetCartHistoryResponse, error) {
+func (c *cart) GetCartrHistory(ctx context.Context, req *pizza.GetCartHistoryRequest) (*pizza.GetCartHistoryResponse, error) {
 
 	query := `SELECT c.id, c.is_active, o.date
           FROM cart AS c
           INNER JOIN orders AS o ON o.cart_id = c.id
           WHERE c.user_id = $1`
 
-	// Warning: You are passing two parameters (req.CartId, req.UserId), but the query expects only one ($1).
-	rows, err := p.db.Query(query, req.CartId, req.UserId)
+	rows, err := c.db.Query(query, req.UserId)
 	if err != nil {
 		return nil, err
 	}
@@ -498,7 +492,7 @@ func (p *pizzas) GetCartrHistory(ctx context.Context, req *pizza.GetCartHistoryR
 	}, nil
 }
 
-func (p *pizzas) GetCartItemHistory(ctx context.Context, req *pizza.GetCarItemtHistoryRequest) (*pizza.GetCarItemtHistoryResponse, error) {
+func (c *cart) GetCartItemHistory(ctx context.Context, req *pizza.GetCarItemtHistoryRequest) (*pizza.GetCarItemtHistoryResponse, error) {
 
 	var cart models.CartIeamHistory
 
@@ -507,8 +501,7 @@ func (p *pizzas) GetCartItemHistory(ctx context.Context, req *pizza.GetCarItemtH
 	JOIN cart AS c ON c.id = ci.cart_id
 	WHERE c.id = $1`
 
-	// Note: The query selects 5 columns, but you scan only 4 variables. Add a variable for the 5th column or use _ to ignore it.
-	err := p.db.QueryRow(query, req.CartHistoryId).Scan(&cart.PizzaId, &cart.PizzaTypeId, &cart.Cost, &cart.Quantity)
+	err := c.db.QueryRow(query, req.CartHistoryId).Scan(&cart.PizzaId, &cart.PizzaTypeId, &cart.Cost, &cart.Quantity, &cart.TotalCost)
 	if err != nil {
 		return nil, err
 	}
@@ -522,5 +515,5 @@ func (p *pizzas) GetCartItemHistory(ctx context.Context, req *pizza.GetCarItemtH
 	}, nil
 }
 
-// General tip: Always try to keep your code clean from debug prints in production, for local development you can use a logger. 
+// General tip: Always try to keep your code clean from debug prints in production, for local development you can use a logger.
 // Keep variable and method names typo-free (typo-free means no spelling mistakes), and keep an eye on SQL query parameters and Scan argument counts for reliability.
