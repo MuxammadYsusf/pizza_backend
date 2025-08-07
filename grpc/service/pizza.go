@@ -117,9 +117,8 @@ func (s *PizzaService) Cart(ctx context.Context, req *pizza.CartRequest) (*pizza
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("card id::", req.GetId())
 
-	_, err = s.pizzaPostgres.Pizza().UpdateTotalCost(ctx, req.Id)
+	_, err = s.pizzaPostgres.Pizza().IncreaseTotalCost(ctx, req.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +126,7 @@ func (s *PizzaService) Cart(ctx context.Context, req *pizza.CartRequest) (*pizza
 	return resp, nil
 }
 
-func (s *PizzaService) UpdatePizzaInCart(ctx context.Context, req *pizza.CartItems) (*pizza.CartItemsResp, error) {
+func (s *PizzaService) IncreaseAmountOfPizza(ctx context.Context, req *pizza.CartItems) (*pizza.CartItemsResp, error) {
 
 	cart, err := s.pizzaPostgres.Pizza().GetFromCart(ctx, req)
 	if err != nil {
@@ -145,12 +144,27 @@ func (s *PizzaService) UpdatePizzaInCart(ctx context.Context, req *pizza.CartIte
 	newCost := pizza.Cost * float32(req.Quantity)
 	req.Cost = newCost
 
-	resp, err := s.pizzaPostgres.Pizza().UpdatePizzaInCart(ctx, req)
+	resp, err := s.pizzaPostgres.Pizza().IncreaseAmountOfPizza(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = s.pizzaPostgres.Pizza().UpdateTotalCost(ctx, req.Id)
+	_, err = s.pizzaPostgres.Pizza().IncreaseTotalCost(ctx, req.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
+
+func (s *PizzaService) DecreaseAmountOfPizza(ctx context.Context, req *pizza.CartItems) (*pizza.CartItemsResp, error) {
+
+	resp, err := s.pizzaPostgres.Pizza().DecreaseAmountOfPizza(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = s.pizzaPostgres.Pizza().DecreaseTotalCost(ctx, req.Id)
 	if err != nil {
 		return nil, err
 	}

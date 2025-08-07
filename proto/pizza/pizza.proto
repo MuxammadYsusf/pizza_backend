@@ -16,7 +16,8 @@ service PizzaService{
     rpc Cart(CartRequest) returns (CartResponse);
     rpc CheckIsOrdered(CheckIsOrderedRequest) returns (CheckIsOrderedResponse);
     rpc OrderPizza(OrderPizzaRequest) returns (OrderPizzaResponse);
-    rpc UpdatePizzaInCart(CartItems) returns (CartItemsResp);
+    rpc IncreaseAmountOfPizza(CartItems) returns (CartItemsResp);
+    rpc DecreaseAmountOfPizza(CartItems) returns (CartItemsResp);
     rpc GetUserHistory(GetCartHistoryRequest) returns (GetCartHistoryResponse);
     rpc GetCartItemHistory(GetCarItemtHistoryRequest) returns (GetCarItemtHistoryResponse);
 }

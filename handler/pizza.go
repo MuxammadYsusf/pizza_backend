@@ -150,7 +150,7 @@ func (h *Handler) PutPizzaIntoCart(ctx *gin.Context) {
 	ctx.JSON(c.OK, resp)
 }
 
-func (h *Handler) UpdatePizzaInCart(ctx *gin.Context) {
+func (h *Handler) IncreasePizzaInCart(ctx *gin.Context) {
 
 	var req pizza.CartItems
 
@@ -159,7 +159,29 @@ func (h *Handler) UpdatePizzaInCart(ctx *gin.Context) {
 		return
 	}
 
-	resp, err := h.GRPCClient.Pizza().UpdatePizzaInCart(ctx, &req)
+	resp, err := h.GRPCClient.Pizza().IncreaseAmountOfPizza(ctx, &req)
+	if err != nil {
+		ctx.JSON(c.Err, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(c.OK, resp)
+}
+
+func (h *Handler) DecreasePizzaInCart(ctx *gin.Context) {
+
+	idStr := ctx.Param("id")
+	typeIdStr := ctx.Param("typeId")
+
+	id, _ := strconv.Atoi(idStr)
+	typeId, _ := strconv.Atoi(typeIdStr)
+
+	fmt.Printf("id: %d \ntypeId: %d\n", id, typeId)
+
+	resp, err := h.GRPCClient.Pizza().DeletePizza(ctx, &pizza.DeletePizzaRequest{
+		Id:     int32(id),
+		TypeId: int32(typeId),
+	})
 	if err != nil {
 		ctx.JSON(c.Err, gin.H{"error": err.Error()})
 		return

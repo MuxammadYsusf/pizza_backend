@@ -51,7 +51,8 @@ func main() {
 		auth.GET("/pizzas/get/:id/:typeId", cont.GetPizzaById)
 		auth.POST("/pizzas/cart", cont.PutPizzaIntoCart)
 		auth.POST("pizzas/order", cont.OrderPizza)
-		auth.PUT("pizzas/update_pizza", cont.UpdatePizzaInCart)
+		auth.PUT("pizzas/addpizza:id/:pizzaId", cont.IncreasePizzaInCart)
+		auth.PUT("/pizzas/removepizza", cont.DecreasePizzaInCart)
 		auth.GET("/pizzas/history", cont.GetCartHistory)
 		auth.GET("/pizzas/history/:id", cont.GetCartItemHistory)
 	}
@@ -65,7 +66,8 @@ func main() {
 		admin.PUT("/pizzas/update/", cont.UpdatePizza)
 		admin.DELETE("/pizzas/delete/:id/:typeId", cont.DeletePizza)
 		admin.POST("/pizzas/cart/:id", cont.PutPizzaIntoCart)
-		admin.PUT("pizzas/update_cart", cont.UpdatePizzaInCart)
+		admin.PUT("pizzas/addpizza/:id/:pizzaId", cont.IncreasePizzaInCart)
+		auth.PUT("/pizzas/removepizza", cont.DecreasePizzaInCart)
 		admin.GET("/pizzas/history", cont.GetCartHistory)
 		admin.GET("/pizzas/history/:id", cont.GetCartItemHistory)
 	}
