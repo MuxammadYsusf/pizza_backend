@@ -67,7 +67,7 @@ func main() {
 		admin.DELETE("/pizzas/delete/:id/:typeId", cont.DeletePizza)
 		admin.POST("/pizzas/cart/:id", cont.PutPizzaIntoCart)
 		admin.PUT("pizzas/addpizza/:id/:pizzaId", cont.IncreasePizzaInCart)
-		auth.PUT("/pizzas/removepizza", cont.DecreasePizzaInCart)
+		admin.PUT("/pizzas/removepizza", cont.DecreasePizzaInCart)
 		admin.GET("/pizzas/history", cont.GetCartHistory)
 		admin.GET("/pizzas/history/:id", cont.GetCartItemHistory)
 	}
