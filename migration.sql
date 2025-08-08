@@ -59,27 +59,13 @@ CREATE TABLE IF NOT EXISTS cart_item (
     FOREIGN KEY (pizza_type_id) REFERENCES types(id)
 );
 
-CREATE OR REPLACE FUNCTION reduce_total_cost()
-RETURNS TRIGGER AS $$
-DECLARE
-    _cost FLOAT;
-BEGIN
-    SELECT cost INTO _cost FROM cart WHERE id = NEW.id;
-    NEW.total_cost := OLD.total_cost - _cost;
-    RETURN new;
-END
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER reduce_total_cost
-BEFORE UPDATE ON cart
-FOR EACH ROW EXECUTE PROCEDURE reduce_total_cost();
-
-
 
 CREATE OR REPLACE FUNCTION cancel_from_cart()
 RETURNS TRIGGER AS $$
 BEGIN
-    NEW.cost := OLD.cost - (OLD.cost - NEW.cost);
+    IF NEW.quantity < OLD.quantity THEN
+        NEW.cost := (OLD.cost / OLD.quantity) * NEW.quantity;
+    END IF;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -87,3 +73,26 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER cencel_from_cart
 BEFORE UPDATE ON cart_item
 FOR EACH ROW EXECUTE PROCEDURE cancel_from_cart();
+
+
+
+CREATE OR REPLACE FUNCTION reduce_total_cost()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF TG_OP = 'UPDATE' AND NEW.quantity < OLD.quantity THEN
+        UPDATE cart
+        SET total_cost = total_cost - (OLD.cost / OLD.quantity) * (OLD.quantity - NEW.quantity)
+        WHERE id = OLD.cart_id;
+    ELSIF TG_OP = 'DELETE' THEN
+        UPDATE cart
+        SET total_cost = total_cost - OLD.cost
+        WHERE id = OLD.cart_id;
+    END IF;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER reduce_total_cost
+AFTER UPDATE OR DELETE ON cart_item
+FOR EACH ROW
+EXECUTE PROCEDURE reduce_total_cost();

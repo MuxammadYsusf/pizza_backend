@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"github/http/copy/task4/generated/pizza"
 )
 
@@ -59,7 +58,6 @@ func (s *PizzaService) DeletePizza(ctx context.Context, req *pizza.DeletePizzaRe
 
 	resp, err := s.pizzaPostgres.Pizza().DeletePizza(ctx, req)
 	if err != nil {
-		fmt.Println("error", err)
 		return nil, err
 	}
 

@@ -12,12 +12,21 @@ type PizzaService struct {
 	pizzaPostgres postgres.NewPostgresI
 	service       client.ServiceManager
 	pizza.UnimplementedPizzaServiceServer
+	pizza.UnimplementedCartServiceServer
+	pizza.UnimplementedOrderServiceServer
 }
 
-type LoginService struct {
+type AuthService struct {
 	loginPostgres postgres.NewPostgresI
 	service       client.ServiceManager
 	session.UnimplementedAuthServiceServer
+}
+
+func NewAuthnService(db *sql.DB, service client.ServiceManager) *AuthService {
+	return &AuthService{
+		loginPostgres: postgres.NewPostgres(db),
+		service:       service,
+	}
 }
 
 func NewPizzaService(db *sql.DB, service client.ServiceManager) *PizzaService {
@@ -27,9 +36,16 @@ func NewPizzaService(db *sql.DB, service client.ServiceManager) *PizzaService {
 	}
 }
 
-func NewLoginService(db *sql.DB, service client.ServiceManager) *LoginService {
-	return &LoginService{
-		loginPostgres: postgres.NewPostgres(db),
+func NewCartService(db *sql.DB, service client.ServiceManager) *PizzaService {
+	return &PizzaService{
+		pizzaPostgres: postgres.NewPostgres(db),
+		service:       service,
+	}
+}
+
+func NewOrderService(db *sql.DB, service client.ServiceManager) *PizzaService {
+	return &PizzaService{
+		pizzaPostgres: postgres.NewPostgres(db),
 		service:       service,
 	}
 }

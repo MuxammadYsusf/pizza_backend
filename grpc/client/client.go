@@ -9,21 +9,33 @@ import (
 )
 
 type ServiceManager interface {
-	Login() session.AuthServiceClient
+	Auth() session.AuthServiceClient
 	Pizza() pizza.PizzaServiceClient
+	Cart() pizza.CartServiceClient
+	Order() pizza.OrderServiceClient
 }
 
 type GRPCClient struct {
-	login session.AuthServiceClient
+	auth  session.AuthServiceClient
 	pizza pizza.PizzaServiceClient
+	cart  pizza.CartServiceClient
+	order pizza.OrderServiceClient
 }
 
-func (g *GRPCClient) Login() session.AuthServiceClient {
-	return g.login
+func (g *GRPCClient) Auth() session.AuthServiceClient {
+	return g.auth
 }
 
 func (g *GRPCClient) Pizza() pizza.PizzaServiceClient {
 	return g.pizza
+}
+
+func (g *GRPCClient) Cart() pizza.CartServiceClient {
+	return g.cart
+}
+
+func (g *GRPCClient) Order() pizza.OrderServiceClient {
+	return g.order
 }
 
 func NewGRPCClient() (ServiceManager, error) {
@@ -32,7 +44,9 @@ func NewGRPCClient() (ServiceManager, error) {
 		return nil, err
 	}
 	return &GRPCClient{
-		login: session.NewAuthServiceClient(conn),
+		auth:  session.NewAuthServiceClient(conn),
 		pizza: pizza.NewPizzaServiceClient(conn),
+		cart:  pizza.NewCartServiceClient(conn),
+		order: pizza.NewOrderServiceClient(conn),
 	}, err
 }

@@ -16,7 +16,7 @@ func (h *Handler) OrderPizza(ctx *gin.Context) {
 		return
 	}
 
-	resp, err := h.GRPCClient.Pizza().OrderPizza(ctx, &req)
+	resp, err := h.GRPCClient.Order().OrderPizza(ctx, &req)
 	if err != nil {
 		ctx.JSON(c.Err, gin.H{"error": err.Error()})
 		return

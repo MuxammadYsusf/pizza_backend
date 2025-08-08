@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func (s *LoginService) Register(ctx context.Context, req *session.RegisterRequest) (*session.RegisterResponse, error) {
+func (s *AuthService) Register(ctx context.Context, req *session.RegisterRequest) (*session.RegisterResponse, error) {
 
 	if req.Username == "" || req.Email == "" || req.Password == "" {
 		return nil, fmt.Errorf("invalid name or password or email address")
@@ -39,7 +39,7 @@ func (s *LoginService) Register(ctx context.Context, req *session.RegisterReques
 	return resp, nil
 }
 
-func (s *LoginService) Login(ctx context.Context, req *session.LoginRequest) (*session.LoginResponse, error) {
+func (s *AuthService) Login(ctx context.Context, req *session.LoginRequest) (*session.LoginResponse, error) {
 
 	if req.Username == "" || req.Password == "" {
 		return nil, fmt.Errorf("invalid name or password")

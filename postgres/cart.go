@@ -18,12 +18,13 @@ type cart struct {
 type CartRepo interface {
 	Cart(ctx context.Context, req *pizza.CartRequest) (*pizza.CartResponse, error)
 	CartItems(ctx context.Context, req *pizza.CartRequest) (*pizza.CartResponse, error)
-	GetFromCart(ctx context.Context, req *pizza.CartItems) (*pizza.CartItemsResp, error)
+	GetCartId(ctx context.Context, userId int32) (*pizza.CartItemsResp, error)
+	GetCartItemId(ctx context.Context, pizzaId int32, cartId int32) (*pizza.CartItemsResp, error)
+	GetFromCart(ctx context.Context, id int32) (*pizza.CartItemsResp, error)
 	CheckIsCartExist(ctx context.Context, req *pizza.CheckIsCartExistRequest) (*pizza.CheckIsCartExistResponse, error)
 	IncreaseAmountOfPizza(ctx context.Context, req *pizza.CartItems) (*pizza.CartItemsResp, error)
 	IncreaseTotalCost(ctx context.Context, id int32) (*pizza.CartItemsResp, error)
 	DecreaseAmountOfPizza(ctx context.Context, req *pizza.CartItems) (*pizza.CartItemsResp, error)
-	DecreaseTotalCost(ctx context.Context, id int32) (*pizza.CartItemsResp, error)
 	GetCartrHistory(ctx context.Context, req *pizza.GetCartHistoryRequest) (*pizza.GetCartHistoryResponse, error)
 	GetCartItemHistory(ctx context.Context, req *pizza.GetCarItemtHistoryRequest) (*pizza.GetCarItemtHistoryResponse, error)
 }
@@ -92,20 +93,55 @@ func (c *cart) CartItems(ctx context.Context, req *pizza.CartRequest) (*pizza.Ca
 	}, nil
 }
 
-func (c *cart) GetFromCart(ctx context.Context, req *pizza.CartItems) (*pizza.CartItemsResp, error) {
+func (c *cart) GetCartId(ctx context.Context, userId int32) (*pizza.CartItemsResp, error) {
 
 	query := `
-    SELECT pizza_id, cart_id FROM cart_item WHERE id = $1
+    SELECT id FROM cart WHERE user_id = $1
 `
-	var pizzaId, cartId int32
-	err := c.db.QueryRow(query, req.Id).Scan(&pizzaId, &cartId)
-	if err != nil {
+	var cartId int32
+
+	err := c.db.QueryRow(query, userId).Scan(&cartId)
+	if err != nil && err != sql.ErrNoRows {
 		return nil, err
 	}
 
 	return &pizza.CartItemsResp{
-		CartId:  cartId,
-		PizzaId: pizzaId,
+		CartId: cartId,
+	}, nil
+}
+
+func (c *cart) GetCartItemId(ctx context.Context, pizzaId int32, cartId int32) (*pizza.CartItemsResp, error) {
+
+	query := `
+    SELECT id FROM cart_item WHERE pizza_id = $1 AND cart_id = $2
+`
+	var id int32
+
+	err := c.db.QueryRow(query, pizzaId, cartId).Scan(&id)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, err
+	}
+
+	return &pizza.CartItemsResp{
+		Id: id,
+	}, nil
+}
+
+func (c *cart) GetFromCart(ctx context.Context, id int32) (*pizza.CartItemsResp, error) {
+
+	query := `
+    SELECT pizza_id, cart_id, quantity FROM cart_item WHERE id = $1
+`
+	var pizzaId, cartId, quantity int32
+	err := c.db.QueryRow(query, id).Scan(&pizzaId, &cartId, &quantity)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, err
+	}
+
+	return &pizza.CartItemsResp{
+		CartId:   cartId,
+		PizzaId:  pizzaId,
+		Quantity: quantity,
 	}, nil
 }
 
@@ -141,7 +177,7 @@ func (c *cart) IncreaseTotalCost(ctx context.Context, id int32) (*pizza.CartItem
 	query := `
 	UPDATE cart
 	SET total_cost = (
-    	SELECT COALESCE(SUM(ci.cost * ci.quantity), 0)
+    	SELECT COALESCE(SUM(ci.cost), 0)
     	FROM cart_item ci
  		WHERE ci.cart_id = $1
 	)
@@ -170,7 +206,7 @@ func (c *cart) DecreaseAmountOfPizza(ctx context.Context, req *pizza.CartItems) 
 	`
 	} else if req.Quantity > 1 {
 		query = `
-	UPDATE cart_item SET id = $1 WHERE id = $1
+	UPDATE cart_item SET quantity = $1 WHERE id = $2
 	`
 	} else {
 		return nil, errors.New("this pizza is bot exists in your cart")
@@ -178,25 +214,6 @@ func (c *cart) DecreaseAmountOfPizza(ctx context.Context, req *pizza.CartItems) 
 	_, err := c.db.Exec(
 		query,
 		req.Id,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return &pizza.CartItemsResp{
-		Message: "success",
-	}, nil
-}
-
-func (c *cart) DecreaseTotalCost(ctx context.Context, userId int32) (*pizza.CartItemsResp, error) {
-	query := `
-	UPDATE cart
-	SET id = $1
-	WHERE user_id = $1;
-	`
-	_, err := c.db.Exec(
-		query,
-		userId,
 	)
 	if err != nil {
 		return nil, err

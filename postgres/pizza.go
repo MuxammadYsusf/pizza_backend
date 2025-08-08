@@ -3,7 +3,6 @@ package postgres
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"github/http/copy/task4/generated/pizza"
 	"github/http/copy/task4/models"
 )
@@ -19,7 +18,7 @@ type PizzaRepo interface {
 	GetPizzas(ctx context.Context, req *pizza.GetPizzasRequest) (*pizza.GetPizzasResponse, error)
 	UpdatePizza(ctx context.Context, req *pizza.UpdatePizzaRequest) (*pizza.UpdatePizzaResponse, error)
 	DeletePizza(ctx context.Context, req *pizza.DeletePizzaRequest) (*pizza.DeletePizzaResponse, error)
-	GetPizzaCost(ctx context.Context, req *pizza.CartItems) (*pizza.CartItemsResp, error)
+	GetPizzaData(ctx context.Context, req *pizza.CartItems) (*pizza.CartItemsResp, error)
 }
 
 func NewPizza(db *sql.DB) PizzaRepo {
@@ -151,10 +150,8 @@ func (p *pizzas) DeletePizza(ctx context.Context, req *pizza.DeletePizzaRequest)
 
 	rowsAffected, err := result.RowsAffected()
 	if rowsAffected == 0 {
-		fmt.Println("error", err)
 		return nil, sql.ErrNoRows
 	} else if err != nil {
-		fmt.Println("error", err)
 		return nil, err
 	}
 
@@ -163,20 +160,21 @@ func (p *pizzas) DeletePizza(ctx context.Context, req *pizza.DeletePizzaRequest)
 	}, nil
 }
 
-func (p *pizzas) GetPizzaCost(ctx context.Context, req *pizza.CartItems) (*pizza.CartItemsResp, error) {
+func (p *pizzas) GetPizzaData(ctx context.Context, req *pizza.CartItems) (*pizza.CartItemsResp, error) {
 
 	var items models.CartItems
 
 	query := `
-    	SELECT cost FROM pizza WHERE id = $1
+    	SELECT cost, id FROM pizza WHERE id = $1
 	`
 
-	err := p.db.QueryRow(query, req.PizzaId).Scan(&items.Cost)
+	err := p.db.QueryRow(query, req.PizzaId).Scan(&items.Cost, &items.ID)
 	if err != nil {
 		return nil, err
 	}
 
 	return &pizza.CartItemsResp{
-		Cost: items.Cost,
+		Cost:    items.Cost,
+		PizzaId: items.ID,
 	}, nil
 }

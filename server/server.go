@@ -14,8 +14,10 @@ import (
 func NewServer(db *sql.DB, serviceManager client.ServiceManager) (grpcServer *grpc.Server) {
 	grpcServer = grpc.NewServer()
 
-	session.RegisterAuthServiceServer(grpcServer, service.NewLoginService(db, serviceManager))
+	session.RegisterAuthServiceServer(grpcServer, service.NewAuthnService(db, serviceManager))
 	pizza.RegisterPizzaServiceServer(grpcServer, service.NewPizzaService(db, serviceManager))
+	pizza.RegisterCartServiceServer(grpcServer, service.NewCartService(db, serviceManager))
+	pizza.RegisterOrderServiceServer(grpcServer, service.NewOrderService(db, serviceManager))
 
 	return
 

@@ -17,7 +17,7 @@ func (h *Handler) Register(ctx *gin.Context) {
 		return
 	}
 
-	resp, err := h.GRPCClient.Login().Register(ctx, &reg)
+	resp, err := h.GRPCClient.Auth().Register(ctx, &reg)
 	if err != nil {
 		ctx.JSON(c.Err, gin.H{"error": err.Error()})
 		return
@@ -35,7 +35,7 @@ func (h *Handler) Login(ctx *gin.Context) {
 		return
 	}
 
-	resp, err := h.GRPCClient.Login().Login(ctx, &l)
+	resp, err := h.GRPCClient.Auth().Login(ctx, &l)
 	if err != nil {
 		ctx.JSON(c.Err, gin.H{"error": err.Error()})
 		return

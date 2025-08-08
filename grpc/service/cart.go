@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"database/sql"
 	"github/http/copy/task4/generated/pizza"
 	"github/http/copy/task4/models"
 )
@@ -14,16 +15,16 @@ func (s *PizzaService) Cart(ctx context.Context, req *pizza.CartRequest) (*pizza
 		UserId: req.UserId,
 		Id:     req.Id,
 	})
-	if err != nil {
-		return nil, err
-	}
-	if !exists.IsActive {
+	if err == sql.ErrNoRows || !exists.IsActive {
 		req.IsActive = true
 		req.TotalCost = 0
 		resp, err = s.pizzaPostgres.Cart().Cart(ctx, req)
 		if err != nil {
 			return nil, err
 		}
+	}
+	if err != nil {
+		return nil, err
 	}
 
 	resp = &pizza.CartResponse{
@@ -40,7 +41,7 @@ func (s *PizzaService) Cart(ctx context.Context, req *pizza.CartRequest) (*pizza
 	req.PizzaTypeId = items.TypeId
 	req.Quantity = items.Quantity
 
-	dataResp, err := s.pizzaPostgres.Pizza().GetPizzaCost(ctx, &pizza.CartItems{
+	dataResp, err := s.pizzaPostgres.Pizza().GetPizzaData(ctx, &pizza.CartItems{
 		UserId:  req.UserId,
 		PizzaId: req.PizzaId,
 	})
@@ -48,43 +49,44 @@ func (s *PizzaService) Cart(ctx context.Context, req *pizza.CartRequest) (*pizza
 		return nil, err
 	}
 
+	cartItemId, err := s.pizzaPostgres.Cart().GetCartItemId(ctx, req.PizzaId, req.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	req.CartItemId = cartItemId.Id
+
+	cart, err := s.pizzaPostgres.Cart().GetFromCart(ctx, cartItemId.Id)
+	if err != nil {
+		return nil, err
+	}
+
 	newCost := dataResp.Cost * float32(req.Quantity)
 	req.Cost = newCost
 
-	_, err = s.pizzaPostgres.Cart().CartItems(ctx, req)
-	if err != nil {
-		return nil, err
-	}
+	if req.PizzaId == cart.PizzaId {
 
-	_, err = s.pizzaPostgres.Cart().IncreaseTotalCost(ctx, req.Id)
-	if err != nil {
-		return nil, err
-	}
+		req.Quantity = cart.Quantity + req.Quantity
 
-	return resp, nil
-}
+		newCost := dataResp.Cost * float32(req.Quantity)
+		req.Cost = newCost
 
-func (s *PizzaService) IncreaseAmountOfPizza(ctx context.Context, req *pizza.CartItems) (*pizza.CartItemsResp, error) {
+		_, err := s.pizzaPostgres.Cart().IncreaseAmountOfPizza(ctx, &pizza.CartItems{
+			Id:       req.CartItemId,
+			CartId:   req.Id,
+			PizzaId:  req.PizzaId,
+			Quantity: req.Quantity,
+			Cost:     req.Cost,
+		})
+		if err != nil {
+			return nil, err
+		}
+	} else {
 
-	cart, err := s.pizzaPostgres.Cart().GetFromCart(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-
-	req.CartId = cart.CartId
-	req.PizzaId = cart.PizzaId
-
-	pizza, err := s.pizzaPostgres.Pizza().GetPizzaCost(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-
-	newCost := pizza.Cost * float32(req.Quantity)
-	req.Cost = newCost
-
-	resp, err := s.pizzaPostgres.Cart().IncreaseAmountOfPizza(ctx, req)
-	if err != nil {
-		return nil, err
+		_, err = s.pizzaPostgres.Cart().CartItems(ctx, req)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	_, err = s.pizzaPostgres.Cart().IncreaseTotalCost(ctx, req.Id)
@@ -97,12 +99,28 @@ func (s *PizzaService) IncreaseAmountOfPizza(ctx context.Context, req *pizza.Car
 
 func (s *PizzaService) DecreaseAmountOfPizza(ctx context.Context, req *pizza.CartItems) (*pizza.CartItemsResp, error) {
 
-	resp, err := s.pizzaPostgres.Cart().DecreaseAmountOfPizza(ctx, req)
+	cartId, err := s.pizzaPostgres.Cart().GetCartId(ctx, req.UserId)
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = s.pizzaPostgres.Cart().DecreaseTotalCost(ctx, req.Id)
+	req.CartId = cartId.CartId
+
+	cartItemId, err := s.pizzaPostgres.Cart().GetCartItemId(ctx, req.PizzaId, req.CartId)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Id = cartItemId.Id
+
+	q, err := s.pizzaPostgres.Cart().GetFromCart(ctx, req.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Quantity = q.Quantity - req.Quantity
+
+	resp, err := s.pizzaPostgres.Cart().DecreaseAmountOfPizza(ctx, req)
 	if err != nil {
 		return nil, err
 	}

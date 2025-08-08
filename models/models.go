@@ -24,14 +24,6 @@ type Cart struct {
 	TotalCost float32 `json:"totalCost"`
 }
 
-type Order struct {
-	ID        int       `json:"id"`
-	Date      time.Time `json:"date"`
-	IsOrdered bool      `json:"isOrdered"`
-	UserId    int       `json:"userId"`
-	Status    string    `json:"status"`
-}
-
 type CartItems struct {
 	ID          int32   `json:"id"`
 	PizzaId     int32   `json:"pizzaId"`
@@ -49,4 +41,12 @@ type CartIeamHistory struct {
 	Cost        float32 `json:"cost"`
 	Quantity    int32   `json:"quantity"`
 	TotalCost   float32 `json:"totalCost"`
+}
+
+type Order struct {
+	ID        int       `json:"id"`
+	Date      time.Time `json:"date"`
+	IsOrdered bool      `json:"isOrdered"`
+	UserId    int       `json:"userId"`
+	Status    string    `json:"status"`
 }

@@ -5,10 +5,6 @@ package pizza;
 option go_package = "generated/pizza";
 import "google/protobuf/timestamp.proto";
 
-// Advice: Right now, all pizza, cart, and order related RPCs are placed into a single PizzaService.
-// For better code organization, maintainability, and scalability, it's a good practice to split your proto into multiple services.
-// For example, you could create separate services like PizzaService (for pizza menu and types), CartService (for everything related to cart), and OrderService (for orders and order history).
-// This will make your API cleaner and each service will only contain relevant methods for its domain.
 service PizzaService{
     rpc CreatePizza(CreatePizzaRequest) returns (CreatePizzaResponse);
     rpc CreatePizzaType(CreatePizzaRequest) returns (CreatePizzaResponse);
@@ -16,14 +12,6 @@ service PizzaService{
     rpc GetPizzaById(GetPizzaByIdRequest) returns (GetPizzaByIdResponse);
     rpc UpdatePizza(UpdatePizzaRequest) returns (UpdatePizzaResponse);
     rpc DeletePizza(DeletePizzaRequest) returns (DeletePizzaResponse);
-    rpc CheckIsCartExist(CheckIsCartExistRequest) returns (CheckIsCartExistResponse);
-    rpc Cart(CartRequest) returns (CartResponse);
-    rpc CheckIsOrdered(CheckIsOrderedRequest) returns (CheckIsOrderedResponse);
-    rpc OrderPizza(OrderPizzaRequest) returns (OrderPizzaResponse);
-    rpc IncreaseAmountOfPizza(CartItems) returns (CartItemsResp);
-    rpc DecreaseAmountOfPizza(CartItems) returns (CartItemsResp);
-    rpc GetUserHistory(GetCartHistoryRequest) returns (GetCartHistoryResponse);
-    rpc GetCartItemHistory(GetCarItemtHistoryRequest) returns (GetCarItemtHistoryResponse);
 }
 
 message CreatePizzaRequest {
@@ -82,6 +70,12 @@ message DeletePizzaResponse {
     string message = 1;
 }
 
+service CartService{
+    rpc Cart(CartRequest) returns (CartResponse);
+    rpc DecreaseAmountOfPizza(CartItems) returns (CartItemsResp);
+    rpc GetCartHistory(GetCartHistoryRequest) returns (GetCartHistoryResponse);
+    rpc GetCartItemHistory(GetCarItemtHistoryRequest) returns (GetCarItemtHistoryResponse);
+}
 message CheckIsCartExistRequest {
     int32 userId = 1;
     bool isActive = 2;
@@ -110,7 +104,58 @@ message CartRequest {
 message CartResponse {
     string message = 1;
 }
+message CartItems {
+    float totalCost = 1;
+    int32 id = 2;
+    int32 pizzaId = 3;
+    int32 pizzaTypeId = 4;
+    float cost = 5;
+    int32 quantity = 6;
+    int32 cartId = 7;
+    int32 userId = 8;
+    repeated CartItems items = 9;
+}
 
+message CartItemsResp {
+    int32 id = 1;
+    string message = 2;
+    int32 cartId = 3;
+    int32 pizzaId = 4;  
+    float cost = 5;
+    int32 quantity = 6;
+    repeated CartItems cartItems = 7;
+}
+
+message GetCartHistoryRequest {
+    int32 cartId = 1;
+    int32 userId = 2;
+}
+
+message GetCartHistoryResponse {
+    int32 cartId = 1;
+    google.protobuf.Timestamp date = 2;
+    int32 userId = 3;
+    bool isActive = 4;
+    repeated GetCartHistoryResponse cartHistory = 5;
+}
+
+message GetCarItemtHistoryRequest {
+    int32 cartHistoryId = 1;
+}
+
+message GetCarItemtHistoryResponse {
+    int32 cartHistoryId = 1;
+    int32 pizzaId = 2;
+    int32 pizzaTypeId = 3;
+    float cost = 4;
+    int32 quantity = 5;
+    repeated GetCarItemtHistoryResponse cartHistory = 6;
+}
+
+service OrderService{
+    rpc CheckIsOrdered(CheckIsOrderedRequest) returns (CheckIsOrderedResponse);
+    rpc OrderPizza(OrderPizzaRequest) returns (OrderPizzaResponse);
+}
 message CheckIsOrderedRequest {
     int32 userId = 1;
     bool isOrdered = 2;
@@ -140,51 +185,7 @@ message OrderPizzaResponse {
     string message = 1;
 }
 
-message CartItems {
-    float totalCost = 1;
-    int32 cartItemId = 2;
-    int32 pizzaId = 3;
-    int32 pizzaTypeId = 4;
-    float cost = 5;
-    int32 quantity = 6;
-    int32 cartId = 7;
-    int32 id = 8;  
-    int32 userId = 9;
-}
 
-message CartItemsResp {
-    repeated CartItems cartItems = 1;
-    string message = 2;
-    int32 cartId = 3;
-    int32 pizzaId = 4;  
-    float cost = 5; 
-}
-
-message GetCartHistoryRequest {
-    int32 cartId = 1;
-    int32 userId = 2;
-}
-
-message GetCartHistoryResponse {
-    int32 cartId = 1;
-    google.protobuf.Timestamp date = 2;
-    int32 userId = 3;
-    bool isActive = 4;
-    repeated GetCartHistoryResponse cartHistory = 5;
-}
-
-message GetCarItemtHistoryRequest {
-    int32 cartHistoryId = 1;
-}
-
-message GetCarItemtHistoryResponse {
-    int32 cartHistoryId = 1;
-    int32 pizzaId = 2;
-    int32 pizzaTypeId = 3;
-    float cost = 4;
-    int32 quantity = 5;
-    repeated GetCarItemtHistoryResponse cartHistory = 6;
-}
 
 
 
