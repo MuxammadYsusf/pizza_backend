@@ -44,9 +44,9 @@ type CartIeamHistory struct {
 }
 
 type Order struct {
-	ID        int       `json:"id"`
+	ID        int32     `json:"id"`
 	Date      time.Time `json:"date"`
 	IsOrdered bool      `json:"isOrdered"`
-	UserId    int       `json:"userId"`
+	UserId    int32     `json:"userId"`
 	Status    string    `json:"status"`
 }

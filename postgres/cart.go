@@ -21,6 +21,7 @@ type CartRepo interface {
 	GetCartId(ctx context.Context, userId int32) (*pizza.CartItemsResp, error)
 	GetCartItemId(ctx context.Context, pizzaId int32, cartId int32) (*pizza.CartItemsResp, error)
 	GetFromCart(ctx context.Context, id int32) (*pizza.CartItemsResp, error)
+	GetTotalCost(ctx context.Context, userId int32, id int32) (*pizza.CartItemsResp, error)
 	CheckIsCartExist(ctx context.Context, req *pizza.CheckIsCartExistRequest) (*pizza.CheckIsCartExistResponse, error)
 	IncreaseAmountOfPizza(ctx context.Context, req *pizza.CartItems) (*pizza.CartItemsResp, error)
 	IncreaseTotalCost(ctx context.Context, id int32) (*pizza.CartItemsResp, error)
@@ -96,7 +97,7 @@ func (c *cart) CartItems(ctx context.Context, req *pizza.CartRequest) (*pizza.Ca
 func (c *cart) GetCartId(ctx context.Context, userId int32) (*pizza.CartItemsResp, error) {
 
 	query := `
-    SELECT id FROM cart WHERE user_id = $1
+    SELECT id FROM cart WHERE user_id = $1 ORDER BY id DESC LIMIT 1
 `
 	var cartId int32
 
@@ -107,6 +108,23 @@ func (c *cart) GetCartId(ctx context.Context, userId int32) (*pizza.CartItemsRes
 
 	return &pizza.CartItemsResp{
 		CartId: cartId,
+	}, nil
+}
+
+func (c *cart) GetTotalCost(ctx context.Context, userId int32, id int32) (*pizza.CartItemsResp, error) {
+
+	query := `
+    SELECT total_cost FROM cart WHERE user_id = $1 AND id = $2
+`
+	var totalCost float32
+
+	err := c.db.QueryRow(query, userId, id).Scan(&totalCost)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, err
+	}
+
+	return &pizza.CartItemsResp{
+		TotalCost: totalCost,
 	}, nil
 }
 
@@ -130,18 +148,19 @@ func (c *cart) GetCartItemId(ctx context.Context, pizzaId int32, cartId int32) (
 func (c *cart) GetFromCart(ctx context.Context, id int32) (*pizza.CartItemsResp, error) {
 
 	query := `
-    SELECT pizza_id, cart_id, quantity FROM cart_item WHERE id = $1
+    SELECT pizza_id, cart_id, quantity, pizza_type_id FROM cart_item WHERE id = $1
 `
-	var pizzaId, cartId, quantity int32
-	err := c.db.QueryRow(query, id).Scan(&pizzaId, &cartId, &quantity)
+	var pizzaId, cartId, quantity, pizzaTypeId int32
+	err := c.db.QueryRow(query, id).Scan(&pizzaId, &cartId, &quantity, &pizzaTypeId)
 	if err != nil && err != sql.ErrNoRows {
 		return nil, err
 	}
 
 	return &pizza.CartItemsResp{
-		CartId:   cartId,
-		PizzaId:  pizzaId,
-		Quantity: quantity,
+		CartId:      cartId,
+		PizzaId:     pizzaId,
+		Quantity:    quantity,
+		PizzaTypeId: pizzaTypeId,
 	}, nil
 }
 

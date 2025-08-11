@@ -83,9 +83,17 @@ func (h *Handler) DecreasePizzaInCart(ctx *gin.Context) {
 
 func (h *Handler) GetCartHistory(ctx *gin.Context) {
 
-	resp, err := h.GRPCClient.Cart().GetCartHistory(ctx, &pizza.GetCartHistoryRequest{})
+	userId := ctx.GetInt("userId")
+	if userId == 0 {
+		ctx.JSON(c.UnAuth, gin.H{"error": "Не авторизован"})
+		return
+	}
+
+	resp, err := h.GRPCClient.Cart().GetCartHistory(ctx, &pizza.GetCartHistoryRequest{
+		UserId: int32(userId),
+	})
 	if err != nil {
-		ctx.JSON(c.Err, gin.H{"error": err})
+		ctx.JSON(c.Err, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -100,7 +108,7 @@ func (h *Handler) GetCartItemHistory(ctx *gin.Context) {
 		CartHistoryId: int32(id),
 	})
 	if err != nil {
-		ctx.JSON(c.Err, gin.H{"error": err})
+		ctx.JSON(c.Err, gin.H{"error": err.Error()})
 		return
 	}
 

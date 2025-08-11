@@ -123,7 +123,9 @@ message CartItemsResp {
     int32 pizzaId = 4;  
     float cost = 5;
     int32 quantity = 6;
-    repeated CartItems cartItems = 7;
+    int32 pizzaTypeId = 7;
+    float totalCost = 8;
+    repeated CartItems cartItems = 9;
 }
 
 message GetCartHistoryRequest {
@@ -168,24 +170,30 @@ message CheckIsOrderedResponse {
     string status = 3;
 }
 
+message OrderItemData{
+    int32 pizzaId = 1;
+    int32 quantity = 2;
+    int32 itemId = 3;
+}
+
 message OrderPizzaRequest {
     int32 id = 1;
     google.protobuf.Timestamp date = 2;
     bool isOrdered = 3;
     int32 userId = 4;
     string status = 5;
-    int32 itemId = 6;
+    repeated int32 itemIds = 6;
     int32 pizza_id = 7;
-    int32 pizza_type_id = 8;
+    float totalCost = 8;
     int32 cart_id = 9;
     int32 quantity = 10;
+    repeated OrderItemData items = 11;
 }
 
 message OrderPizzaResponse {
     string message = 1;
+    string status = 2;
+    int32 id = 3;
+    repeated int32 itemIds = 4;
+    google.protobuf.Timestamp date = 5;
 }
-
-
-
-
-

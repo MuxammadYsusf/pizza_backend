@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS orders (
     is_ordered BOOLEAN NOT NULL,
     user_id INT NOT NULL,
     status TEXT NOT NULL,
+    cart_id INT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
