@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	c "github/http/copy/task4/constants"
 	"github/http/copy/task4/generated/pizza"
 	"strconv"
@@ -91,8 +90,6 @@ func (h *Handler) GetTotalCost(ctx *gin.Context) {
 		ctx.JSON(c.BadReq, gin.H{"error": err.Error()})
 		return
 	}
-
-	fmt.Println("-->", id)
 
 	resp, err := h.GRPCClient.Cart().GetTotalCost(ctx, &pizza.CartItems{
 		CartId: int32(id),

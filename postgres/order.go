@@ -102,15 +102,12 @@ func (o *orders) GetOrderId(ctx context.Context, req *pizza.OrderPizzaRequest) (
 		return nil, err
 	}
 
-	fmt.Println("order", order.ID)
-
 	return &pizza.OrderPizzaResponse{
 		Message: "success",
 		Id:      order.ID,
 	}, nil
 }
 
-// DROP
 func (o *orders) GetOrderItemId(ctx context.Context, req *pizza.OrderPizzaRequest) (*pizza.OrderPizzaResponse, error) {
 
 	query := `SELECT array_agg(id ORDER BY id DESC)
@@ -132,7 +129,6 @@ func (o *orders) GetOrderItemId(ctx context.Context, req *pizza.OrderPizzaReques
 
 	if len(ids) != 0 {
 		exists = true
-		fmt.Println("exists", exists)
 	}
 
 	return &pizza.OrderPizzaResponse{
@@ -170,7 +166,6 @@ func (o *orders) OrderItem(ctx context.Context, req *pizza.OrderPizzaRequest) (*
 
 	if len(ids) != 0 {
 		exists = true
-		fmt.Println("exists", exists)
 	}
 
 	if exists == true {
@@ -204,7 +199,6 @@ func (o *orders) OrderItem(ctx context.Context, req *pizza.OrderPizzaRequest) (*
 
 	_, err = tx.Exec(query, values...)
 	if err != nil {
-		fmt.Println("err", err)
 		tx.Rollback()
 		return nil, err
 	}

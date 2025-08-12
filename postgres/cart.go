@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 	"github/http/copy/task4/generated/pizza"
 	"github/http/copy/task4/models"
 	"time"
@@ -26,6 +25,7 @@ type CartRepo interface {
 	GetFromCart(ctx context.Context, id int32) (*pizza.CartItemsResp, error)
 	CheckIsCartExist(ctx context.Context, req *pizza.CheckIsCartExistRequest) (*pizza.CheckIsCartExistResponse, error)
 	GetTotalCost(ctx context.Context, id int32) (*pizza.CartItemsResp, error)
+	CloseTheCart(ctx context.Context, cartId int32, isActive bool) (*pizza.CartResponse, error)
 	GetCartrHistory(ctx context.Context, req *pizza.GetCartHistoryRequest) (*pizza.GetCartHistoryResponse, error)
 	GetCartItemHistory(ctx context.Context, req *pizza.GetCarItemtHistoryRequest) (*pizza.GetCarItemtHistoryResponse, error)
 }
@@ -75,8 +75,6 @@ func (c *cart) CartItems(ctx context.Context, req *pizza.CartRequest) (*pizza.Ca
 
 	query := `INSERT INTO cart_item(pizza_id, pizza_type_id, cart_id, quantity)
 	VALUES($1, $2, $3, $4)`
-
-	fmt.Println("cart Id", req.Id)
 
 	_, err := c.db.Exec(
 		query,
@@ -271,5 +269,24 @@ func (c *cart) GetCartItemHistory(ctx context.Context, req *pizza.GetCarItemtHis
 		PizzaTypeId:   cart.PizzaTypeId,
 		Cost:          cart.Cost,
 		Quantity:      cart.Quantity,
+	}, nil
+}
+
+func (c *cart) CloseTheCart(ctx context.Context, cartId int32, isActive bool) (*pizza.CartResponse, error) {
+
+	query := `UPDATE cart SET is_active = $1 WHERE id = $2`
+
+	_, err := c.db.Exec(
+		query,
+		isActive,
+		cartId,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &pizza.CartResponse{
+		Message: "success",
 	}, nil
 }

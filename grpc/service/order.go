@@ -70,13 +70,20 @@ func (s *PizzaService) OrderPizza(ctx context.Context, req *pizza.OrderPizzaRequ
 
 		resp, err = s.pizzaPostgres.Order().OrderItem(ctx, req)
 		if err != nil {
-			fmt.Println("ERR1", err)
 			return nil, err
 		}
 
 		_, err = s.pizzaPostgres.Order().UpdateOrderStatus(ctx, req)
 		if err != nil {
-			fmt.Println("ERR2", err)
+			return nil, err
+		}
+
+		fmt.Println("req.CartId", req.CartId)
+
+		isActive := false
+
+		_, err = s.pizzaPostgres.Cart().CloseTheCart(ctx, req.CartId, isActive)
+		if err != nil {
 			return nil, err
 		}
 	}

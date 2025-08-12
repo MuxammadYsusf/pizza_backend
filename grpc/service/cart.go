@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"github/http/copy/task4/generated/pizza"
 	"github/http/copy/task4/models"
 )
@@ -16,7 +15,6 @@ func (s *PizzaService) Cart(ctx context.Context, req *pizza.CartRequest) (*pizza
 		UserId: req.UserId,
 		Id:     req.Id,
 	})
-	fmt.Println("cartId", req.Id)
 	if err == sql.ErrNoRows || !exists.IsActive {
 		req.IsActive = true
 		req.TotalCost = 0
