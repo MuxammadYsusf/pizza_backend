@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS pizza (
     name TEXT NOT NULL,
     cost FLOAT NOT NULL,
     type_id INT NOT NULL,
-    FOREIGN KEY (type_id) REFERENCES types(id)
+    FOREIGN KEY (type_id) REFERENCES types(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS types (
@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS orders (
     user_id INT NOT NULL,
     status TEXT NOT NULL,
     cart_id INT NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS order_item (
@@ -35,8 +35,8 @@ CREATE TABLE IF NOT EXISTS order_item (
     cost FLOAT NOT NULL,
     quantity INT NOT NULL,
     order_id INT NOT NULL,
-    FOREIGN KEY (pizza_id) REFERENCES pizza(id),
-    FOREIGN KEY (order_id) REFERENCES orders(id)
+    FOREIGN KEY (pizza_id) REFERENCES pizza(id) ON DELETE CASCADE,
+    FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
 
 );
 
@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS cart (
     user_id INT NOT NULL,
     is_active BOOLEAN NOT NULL,
     total_cost FLOAT NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS cart_item (
@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS cart_item (
     cost INT NOT NULL,
     cart_id INT NOT NULL,
     quantity INT NOT NULL,
-    FOREIGN KEY (cart_id) REFERENCES cart(id),
-    FOREIGN KEY (pizza_id) REFERENCES pizza(id),
-    FOREIGN KEY (pizza_type_id) REFERENCES types(id)
+    FOREIGN KEY (cart_id) REFERENCES cart(id) ON DELETE CASCADE,
+    FOREIGN KEY (pizza_id) REFERENCES pizza(id) ON DELETE CASCADE,
+    FOREIGN KEY (pizza_type_id) REFERENCES types(id) ON DELETE CASCADE
 );
