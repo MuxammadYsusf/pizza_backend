@@ -136,7 +136,7 @@ func (s *PizzaService) GetCartHistory(ctx context.Context, req *pizza.GetCartHis
 
 func (s *PizzaService) GetCartItemHistory(ctx context.Context, req *pizza.GetCarItemtHistoryRequest) (*pizza.GetCarItemtHistoryResponse, error) {
 
-	resp, err := s.pizzaPostgres.Cart().GetCartItemHistory(ctx, req)
+	resp, err := s.pizzaPostgres.Cart().GetCartItemHistory(ctx, req.CartHistoryId)
 	if err != nil {
 		return nil, err
 	}

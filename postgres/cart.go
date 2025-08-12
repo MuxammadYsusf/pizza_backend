@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"github/http/copy/task4/generated/pizza"
 	"github/http/copy/task4/models"
 	"time"
@@ -27,7 +28,7 @@ type CartRepo interface {
 	GetTotalCost(ctx context.Context, id int32) (*pizza.CartItemsResp, error)
 	CloseTheCart(ctx context.Context, cartId int32, isActive bool) (*pizza.CartResponse, error)
 	GetCartrHistory(ctx context.Context, req *pizza.GetCartHistoryRequest) (*pizza.GetCartHistoryResponse, error)
-	GetCartItemHistory(ctx context.Context, req *pizza.GetCarItemtHistoryRequest) (*pizza.GetCarItemtHistoryResponse, error)
+	GetCartItemHistory(ctx context.Context, id int32) (*pizza.GetCarItemtHistoryResponse, error)
 }
 
 func NewCart(db *sql.DB) CartRepo {
@@ -213,6 +214,25 @@ func (c *cart) GetTotalCost(ctx context.Context, id int32) (*pizza.CartItemsResp
 	}, nil
 }
 
+func (c *cart) CloseTheCart(ctx context.Context, cartId int32, isActive bool) (*pizza.CartResponse, error) {
+
+	query := `UPDATE cart SET is_active = $1 WHERE id = $2`
+
+	_, err := c.db.Exec(
+		query,
+		isActive,
+		cartId,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &pizza.CartResponse{
+		Message: "success",
+	}, nil
+}
+
 func (c *cart) GetCartrHistory(ctx context.Context, req *pizza.GetCartHistoryRequest) (*pizza.GetCartHistoryResponse, error) {
 
 	query := `SELECT c.id, c.is_active, o.date
@@ -249,44 +269,26 @@ func (c *cart) GetCartrHistory(ctx context.Context, req *pizza.GetCartHistoryReq
 	}, nil
 }
 
-func (c *cart) GetCartItemHistory(ctx context.Context, req *pizza.GetCarItemtHistoryRequest) (*pizza.GetCarItemtHistoryResponse, error) {
+func (c *cart) GetCartItemHistory(ctx context.Context, id int32) (*pizza.GetCarItemtHistoryResponse, error) {
 
 	var cart models.CartIeamHistory
 
-	query := `SELECT ci.pizza_id, ci.pizza_type_id, ci.cost, ci.quantity, c.total_cost
-	FROM cart_item AS ci 
-	JOIN cart AS c ON c.id = ci.cart_id
-	WHERE c.id = $1`
+	fmt.Println("req.CartHistoryId", id)
 
-	err := c.db.QueryRow(query, req.CartHistoryId).Scan(&cart.PizzaId, &cart.PizzaTypeId, &cart.Cost, &cart.Quantity, &cart.TotalCost)
+	query := `SELECT oi.pizza_id, oi.cost, oi.quantity
+	FROM order_item AS oi
+	JOIN orders AS o ON o.id = oi.order_id
+	WHERE o.id = $1`
+
+	err := c.db.QueryRow(query, id).Scan(&cart.PizzaId, &cart.Cost, &cart.Quantity)
 	if err != nil {
 		return nil, err
 	}
 
 	return &pizza.GetCarItemtHistoryResponse{
-		CartHistoryId: req.CartHistoryId,
+		CartHistoryId: id,
 		PizzaId:       cart.PizzaId,
-		PizzaTypeId:   cart.PizzaTypeId,
 		Cost:          cart.Cost,
 		Quantity:      cart.Quantity,
-	}, nil
-}
-
-func (c *cart) CloseTheCart(ctx context.Context, cartId int32, isActive bool) (*pizza.CartResponse, error) {
-
-	query := `UPDATE cart SET is_active = $1 WHERE id = $2`
-
-	_, err := c.db.Exec(
-		query,
-		isActive,
-		cartId,
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &pizza.CartResponse{
-		Message: "success",
 	}, nil
 }

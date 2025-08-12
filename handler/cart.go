@@ -123,7 +123,13 @@ func (h *Handler) GetCartHistory(ctx *gin.Context) {
 
 func (h *Handler) GetCartItemHistory(ctx *gin.Context) {
 
-	id := ctx.GetInt("id")
+	IdStr := ctx.Param("id")
+
+	id, err := strconv.Atoi(IdStr)
+	if err != nil {
+		ctx.JSON(c.BadReq, gin.H{"error": err.Error()})
+		return
+	}
 
 	resp, err := h.GRPCClient.Cart().GetCartItemHistory(ctx, &pizza.GetCarItemtHistoryRequest{
 		CartHistoryId: int32(id),
