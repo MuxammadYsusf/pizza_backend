@@ -65,7 +65,7 @@ func main() {
 		admin.GET("/pizzas/get", cont.GetPizzas)
 		admin.GET("/pizzas/get/:id/:typeId", cont.GetPizzaById)
 		admin.PUT("/pizzas/update", cont.UpdatePizza)
-		admin.DELETE("/pizzas/delete/:id/:typeId", cont.DeletePizza)
+		admin.DELETE("/pizzas/delete/:id", cont.DeletePizza)
 		admin.POST("/pizzas/cart/:id", cont.PutPizzaIntoCart)
 		admin.PUT("/pizzas/decrease", cont.DecreasePizzaQuantity)
 		admin.GET("/pizzas/get/pizza-cost/:id", cont.GetPizzaCost)

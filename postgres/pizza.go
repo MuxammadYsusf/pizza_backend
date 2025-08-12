@@ -139,12 +139,11 @@ func (p *pizzas) UpdatePizza(ctx context.Context, req *pizza.UpdatePizzaRequest)
 
 func (p *pizzas) DeletePizza(ctx context.Context, req *pizza.DeletePizzaRequest) (*pizza.DeletePizzaResponse, error) {
 
-	query := `DELETE FROM pizza WHERE id = $1 AND type_id = $2`
+	query := `DELETE FROM pizza WHERE id = $1`
 
 	result, err := p.db.Exec(
 		query,
 		req.Id,
-		req.TypeId,
 	)
 	if err != nil {
 		return nil, err

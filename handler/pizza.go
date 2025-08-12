@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	c "github/http/copy/task4/constants"
 	"github/http/copy/task4/generated/pizza"
 	"strconv"
@@ -102,22 +103,16 @@ func (h *Handler) UpdatePizza(ctx *gin.Context) {
 func (h *Handler) DeletePizza(ctx *gin.Context) {
 
 	idStr := ctx.Param("id")
-	typeIdStr := ctx.Param("typeId")
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		ctx.JSON(c.BadReq, gin.H{"error": err.Error()})
-		return
-	}
-	typeId, err := strconv.Atoi(typeIdStr)
-	if err != nil {
+		fmt.Println("HERE?")
 		ctx.JSON(c.BadReq, gin.H{"error": err.Error()})
 		return
 	}
 
 	resp, err := h.GRPCClient.Pizza().DeletePizza(ctx, &pizza.DeletePizzaRequest{
-		Id:     int32(id),
-		TypeId: int32(typeId),
+		Id: int32(id),
 	})
 	if err != nil {
 		ctx.JSON(c.Err, gin.H{"error": err.Error()})
