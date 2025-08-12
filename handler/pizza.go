@@ -126,3 +126,24 @@ func (h *Handler) DeletePizza(ctx *gin.Context) {
 
 	ctx.JSON(c.OK, resp)
 }
+
+func (h *Handler) GetPizzaCost(ctx *gin.Context) {
+
+	idStr := ctx.Param("id")
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		ctx.JSON(c.BadReq, gin.H{"error": err.Error()})
+		return
+	}
+
+	resp, err := h.GRPCClient.Pizza().GetPizzaCost(ctx, &pizza.CartItems{
+		PizzaId: int32(id),
+	})
+	if err != nil {
+		ctx.JSON(c.Err, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(c.OK, resp)
+}

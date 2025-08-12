@@ -19,6 +19,8 @@ type PizzaRepo interface {
 	UpdatePizza(ctx context.Context, req *pizza.UpdatePizzaRequest) (*pizza.UpdatePizzaResponse, error)
 	DeletePizza(ctx context.Context, req *pizza.DeletePizzaRequest) (*pizza.DeletePizzaResponse, error)
 	GetPizzaData(ctx context.Context, req *pizza.CartItems) (*pizza.CartItemsResp, error)
+	GetPizzaCost(ctx context.Context, pizzaId int32) (*pizza.CartItemsResp, error)
+	GetAllPizzaCost(ctx context.Context, orderId int32) (*pizza.OrderPizzaResponse, error)
 }
 
 func NewPizza(db *sql.DB) PizzaRepo {
@@ -176,5 +178,58 @@ func (p *pizzas) GetPizzaData(ctx context.Context, req *pizza.CartItems) (*pizza
 	return &pizza.CartItemsResp{
 		Cost:    items.Cost,
 		PizzaId: items.ID,
+	}, nil
+}
+
+func (p *pizzas) GetPizzaCost(ctx context.Context, pizzaId int32) (*pizza.CartItemsResp, error) {
+	var cost float32
+
+	query := `SELECT COALESCE(SUM(p.cost * ci.quantity), 0) AS cost
+	FROM pizza p
+	JOIN cart_item ci ON p.id = ci.pizza_id
+	WHERE p.id = $1`
+
+	err := p.db.QueryRow(query, pizzaId).Scan(&cost)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pizza.CartItemsResp{
+		Cost: cost,
+	}, nil
+}
+
+func (p *pizzas) GetAllPizzaCost(ctx context.Context, orderId int32) (*pizza.OrderPizzaResponse, error) {
+	var costs []float32
+
+	query := `SELECT 
+	    ci.pizza_id,
+	    ci.quantity,
+	    (p.cost * ci.quantity) AS cost
+	FROM cart_item ci
+	JOIN pizza p ON p.id = ci.pizza_id
+	WHERE ci.cart_id = $1;`
+
+	rows, err := p.db.Query(query, orderId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var pizzaId, quantity int32
+		var cost float64
+		if err := rows.Scan(&pizzaId, &quantity, &cost); err != nil {
+			return nil, err
+		}
+		costs = append(costs, float32(cost))
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return &pizza.OrderPizzaResponse{
+		Cost: costs,
 	}, nil
 }

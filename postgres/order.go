@@ -110,6 +110,7 @@ func (o *orders) GetOrderId(ctx context.Context, req *pizza.OrderPizzaRequest) (
 	}, nil
 }
 
+// DROP
 func (o *orders) GetOrderItemId(ctx context.Context, req *pizza.OrderPizzaRequest) (*pizza.OrderPizzaResponse, error) {
 
 	query := `SELECT array_agg(id ORDER BY id DESC)
@@ -118,38 +119,30 @@ func (o *orders) GetOrderItemId(ctx context.Context, req *pizza.OrderPizzaReques
     	FROM order_item
     	WHERE order_id = $1
     	ORDER BY id DESC
-    	LIMIT 2
+    	LIMIT $2
 	) sub;`
 
-	rows, err := o.db.Query(query, req.Id)
-	if err != nil {
-		fmt.Println("here is the error", err)
+	var ids []int32
+	var exists bool
+
+	err := o.db.QueryRow(query, req.Id, req.Limit).Scan(pq.Array(&ids))
+	if err != nil && err != sql.ErrNoRows {
 		return nil, err
 	}
-	defer rows.Close()
 
-	var ids []int32
-	for rows.Next() {
-		if err := rows.Scan(pq.Array(&ids)); err != nil {
-			return nil, err
-		}
+	if len(ids) != 0 {
+		exists = true
+		fmt.Println("exists", exists)
 	}
-
-	fmt.Println("PASS THROUGH ITEM", ids)
 
 	return &pizza.OrderPizzaResponse{
 		Message: "success",
 		ItemIds: ids,
+		IsExist: exists,
 	}, nil
 }
 
 func (o *orders) OrderItem(ctx context.Context, req *pizza.OrderPizzaRequest) (*pizza.OrderPizzaResponse, error) {
-
-	fmt.Println("req From DB", req)
-
-	if len(req.Items) == 0 {
-		return nil, errors.New("no results")
-	}
 
 	tx, err := o.db.Begin()
 	if err != nil {
@@ -164,24 +157,29 @@ func (o *orders) OrderItem(ctx context.Context, req *pizza.OrderPizzaRequest) (*
     	FROM order_item
     	WHERE order_id = $1
     	ORDER BY id DESC
-    	LIMIT 2
+    	LIMIT $2
 	) sub;`
 
-	rows, err := o.db.Query(query, req.Id)
-	if err != nil {
-		fmt.Print("MANA ", err)
+	var ids []int32
+	var exists bool
+
+	err = o.db.QueryRow(query, req.Id, req.Limit).Scan(pq.Array(&ids))
+	if err != nil && err != sql.ErrNoRows {
 		return nil, err
 	}
-	defer rows.Close()
 
-	var ids []int32
-	for rows.Next() {
-		if err := rows.Scan(pq.Array(&ids)); err != nil {
-			return nil, err
-		}
+	if len(ids) != 0 {
+		exists = true
+		fmt.Println("exists", exists)
 	}
 
-	query = `INSERT INTO order_item(pizza_id, total_cost, quantity, order_id) VALUES`
+	if exists == true {
+		return &pizza.OrderPizzaResponse{
+			Message: "already ordered",
+		}, nil
+	}
+
+	query = `INSERT INTO order_item(pizza_id, cost, quantity, order_id) VALUES`
 	values := []interface{}{}
 	placeholders := []string{}
 
@@ -192,16 +190,10 @@ func (o *orders) OrderItem(ctx context.Context, req *pizza.OrderPizzaRequest) (*
 				i*4+1, i*4+2, i*4+3, i*4+4))
 		values = append(values,
 			items.PizzaId,
-			req.TotalCost,
+			req.Cost[i],
 			items.Quantity,
 			req.Id,
 		)
-	}
-
-	if req.ItemIds[0] == ids[0] && req.ItemIds[1] == ids[1] {
-		return &pizza.OrderPizzaResponse{
-			Message: "already ordered",
-		}, nil
 	}
 
 	if len(placeholders) == 0 {
@@ -224,7 +216,7 @@ func (o *orders) OrderItem(ctx context.Context, req *pizza.OrderPizzaRequest) (*
 
 func (o *orders) UpdateOrderStatus(ctx context.Context, req *pizza.OrderPizzaRequest) (*pizza.OrderPizzaRequest, error) {
 
-	query := `UPDATE orders SET status = $1 WHERE id = $2`
+	query := `UPDATE orders SET status = $1, is_ordered = $2 WHERE id = $3`
 
 	tx, err := o.db.Begin()
 	if err != nil {
@@ -234,6 +226,7 @@ func (o *orders) UpdateOrderStatus(ctx context.Context, req *pizza.OrderPizzaReq
 	_, err = tx.Exec(
 		query,
 		req.Status,
+		req.IsOrdered,
 		req.Id,
 	)
 	if err != nil {

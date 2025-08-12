@@ -63,3 +63,13 @@ func (s *PizzaService) DeletePizza(ctx context.Context, req *pizza.DeletePizzaRe
 
 	return resp, nil
 }
+
+func (s *PizzaService) GetPizzaCost(ctx context.Context, req *pizza.CartItems) (*pizza.CartItemsResp, error) {
+
+	resp, err := s.pizzaPostgres.Pizza().GetPizzaCost(ctx, req.PizzaId)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}

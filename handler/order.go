@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	c "github/http/copy/task4/constants"
 	"github/http/copy/task4/generated/pizza"
 
@@ -12,6 +11,7 @@ func (h *Handler) OrderPizza(ctx *gin.Context) {
 
 	var req struct {
 		Items  []*pizza.OrderItemData `json:"items"`
+		Limit  int32                  `json:"limit"`
 		UserId int                    `json:"userId"`
 	}
 
@@ -26,11 +26,10 @@ func (h *Handler) OrderPizza(ctx *gin.Context) {
 		return
 	}
 
-	fmt.Println("req", req)
-
 	resp, err := h.GRPCClient.Order().OrderPizza(ctx, &pizza.OrderPizzaRequest{
-		UserId: int32(req.UserId),
 		Items:  req.Items,
+		UserId: int32(req.UserId),
+		Limit:  req.Limit,
 	})
 	if err != nil {
 		ctx.JSON(c.Err, gin.H{"error": err.Error()})

@@ -28,6 +28,7 @@ func (s *PizzaService) OrderPizza(ctx context.Context, req *pizza.OrderPizzaRequ
 			Date:    req.Date,
 		}
 	} else {
+
 		if exists.Status == c.OrderStatusDone || exists.Status == c.OrderStatusInProgress {
 			req.IsOrdered = true
 			req.Status = exists.Status
@@ -54,31 +55,28 @@ func (s *PizzaService) OrderPizza(ctx context.Context, req *pizza.OrderPizzaRequ
 		}
 
 		req.Id = resp.Id
-		fmt.Println("Order Id", req.Id)
 
-		tc, err := s.pizzaPostgres.Cart().GetTotalCost(ctx, req.UserId, req.CartId)
+		pc, err := s.pizzaPostgres.Pizza().GetAllPizzaCost(ctx, req.Id)
 		if err != nil {
 			return nil, err
 		}
 
-		req.TotalCost = tc.TotalCost
-		req.Status = c.OrderStatusDone
-		fmt.Println("Hi")
+		req.Cost = pc.Cost
 
 		resp, err = s.pizzaPostgres.Order().GetOrderItemId(ctx, req)
 		if err != nil {
 			return nil, err
 		}
 
-		req.ItemIds = resp.ItemIds
-
-		_, err = s.pizzaPostgres.Order().OrderItem(ctx, req)
+		resp, err = s.pizzaPostgres.Order().OrderItem(ctx, req)
 		if err != nil {
+			fmt.Println("ERR1", err)
 			return nil, err
 		}
 
 		_, err = s.pizzaPostgres.Order().UpdateOrderStatus(ctx, req)
 		if err != nil {
+			fmt.Println("ERR2", err)
 			return nil, err
 		}
 	}

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	c "github/http/copy/task4/constants"
 	"github/http/copy/task4/generated/pizza"
 	"strconv"
@@ -50,7 +51,7 @@ func (h *Handler) PutPizzaIntoCart(ctx *gin.Context) {
 	ctx.JSON(c.OK, resp)
 }
 
-func (h *Handler) DecreasePizzaInCart(ctx *gin.Context) {
+func (h *Handler) DecreasePizzaQuantity(ctx *gin.Context) {
 	var req struct {
 		PizzaId  int32 `json:"pizzaId"`
 		Quantity int32 `json:"quantity"`
@@ -68,10 +69,33 @@ func (h *Handler) DecreasePizzaInCart(ctx *gin.Context) {
 		return
 	}
 
-	resp, err := h.GRPCClient.Cart().DecreaseAmountOfPizza(ctx, &pizza.CartItems{
+	resp, err := h.GRPCClient.Cart().DecreasePizzaQuantity(ctx, &pizza.CartItems{
 		UserId:   int32(req.UserId),
 		PizzaId:  req.PizzaId,
 		Quantity: req.Quantity,
+	})
+	if err != nil {
+		ctx.JSON(c.Err, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(c.OK, resp)
+}
+
+func (h *Handler) GetTotalCost(ctx *gin.Context) {
+
+	IdStr := ctx.Param("id")
+
+	id, err := strconv.Atoi(IdStr)
+	if err != nil {
+		ctx.JSON(c.BadReq, gin.H{"error": err.Error()})
+		return
+	}
+
+	fmt.Println("-->", id)
+
+	resp, err := h.GRPCClient.Cart().GetTotalCost(ctx, &pizza.CartItems{
+		CartId: int32(id),
 	})
 	if err != nil {
 		ctx.JSON(c.Err, gin.H{"error": err.Error()})

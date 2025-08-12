@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"github/http/copy/task4/generated/pizza"
 	"github/http/copy/task4/models"
 )
@@ -15,6 +16,7 @@ func (s *PizzaService) Cart(ctx context.Context, req *pizza.CartRequest) (*pizza
 		UserId: req.UserId,
 		Id:     req.Id,
 	})
+	fmt.Println("cartId", req.Id)
 	if err == sql.ErrNoRows || !exists.IsActive {
 		req.IsActive = true
 		req.TotalCost = 0
@@ -68,16 +70,7 @@ func (s *PizzaService) Cart(ctx context.Context, req *pizza.CartRequest) (*pizza
 
 		req.Quantity = cart.Quantity + req.Quantity
 
-		newCost := dataResp.Cost * float32(req.Quantity)
-		req.Cost = newCost
-
-		_, err := s.pizzaPostgres.Cart().IncreaseAmountOfPizza(ctx, &pizza.CartItems{
-			Id:       req.CartItemId,
-			CartId:   req.Id,
-			PizzaId:  req.PizzaId,
-			Quantity: req.Quantity,
-			Cost:     req.Cost,
-		})
+		_, err := s.pizzaPostgres.Cart().IncreasePizzaQuantity(ctx, req)
 		if err != nil {
 			return nil, err
 		}
@@ -89,15 +82,10 @@ func (s *PizzaService) Cart(ctx context.Context, req *pizza.CartRequest) (*pizza
 		}
 	}
 
-	_, err = s.pizzaPostgres.Cart().IncreaseTotalCost(ctx, req.Id)
-	if err != nil {
-		return nil, err
-	}
-
 	return resp, nil
 }
 
-func (s *PizzaService) DecreaseAmountOfPizza(ctx context.Context, req *pizza.CartItems) (*pizza.CartItemsResp, error) {
+func (s *PizzaService) DecreasePizzaQuantity(ctx context.Context, req *pizza.CartItems) (*pizza.CartItemsResp, error) {
 
 	cartId, err := s.pizzaPostgres.Cart().GetCartId(ctx, req.UserId)
 	if err != nil {
@@ -120,7 +108,17 @@ func (s *PizzaService) DecreaseAmountOfPizza(ctx context.Context, req *pizza.Car
 
 	req.Quantity = q.Quantity - req.Quantity
 
-	resp, err := s.pizzaPostgres.Cart().DecreaseAmountOfPizza(ctx, req)
+	resp, err := s.pizzaPostgres.Cart().DecreasePizzaQuantity(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
+
+func (s *PizzaService) GetTotalCost(ctx context.Context, req *pizza.CartItems) (*pizza.CartItemsResp, error) {
+
+	resp, err := s.pizzaPostgres.Cart().GetTotalCost(ctx, req.CartId)
 	if err != nil {
 		return nil, err
 	}

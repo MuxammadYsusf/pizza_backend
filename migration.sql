@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS cart_item (
     FOREIGN KEY (pizza_type_id) REFERENCES types(id)
 );
 
-
+-- DPOR
 CREATE OR REPLACE FUNCTION cancel_from_cart()
 RETURNS TRIGGER AS $$
 BEGIN

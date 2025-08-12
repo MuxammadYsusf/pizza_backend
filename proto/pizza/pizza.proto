@@ -12,6 +12,7 @@ service PizzaService{
     rpc GetPizzaById(GetPizzaByIdRequest) returns (GetPizzaByIdResponse);
     rpc UpdatePizza(UpdatePizzaRequest) returns (UpdatePizzaResponse);
     rpc DeletePizza(DeletePizzaRequest) returns (DeletePizzaResponse);
+    rpc GetPizzaCost(CartItems) returns (CartItemsResp);
 }
 
 message CreatePizzaRequest {
@@ -72,7 +73,8 @@ message DeletePizzaResponse {
 
 service CartService{
     rpc Cart(CartRequest) returns (CartResponse);
-    rpc DecreaseAmountOfPizza(CartItems) returns (CartItemsResp);
+    rpc DecreasePizzaQuantity(CartItems) returns (CartItemsResp);
+    rpc GetTotalCost(CartItems) returns (CartItemsResp);
     rpc GetCartHistory(GetCartHistoryRequest) returns (GetCartHistoryResponse);
     rpc GetCartItemHistory(GetCarItemtHistoryRequest) returns (GetCarItemtHistoryResponse);
 }
@@ -173,7 +175,7 @@ message CheckIsOrderedResponse {
 message OrderItemData{
     int32 pizzaId = 1;
     int32 quantity = 2;
-    int32 itemId = 3;
+    repeated int32 itemIds = 3;
 }
 
 message OrderPizzaRequest {
@@ -184,16 +186,20 @@ message OrderPizzaRequest {
     string status = 5;
     repeated int32 itemIds = 6;
     int32 pizza_id = 7;
-    float totalCost = 8;
+    repeated float cost = 8;
     int32 cart_id = 9;
     int32 quantity = 10;
-    repeated OrderItemData items = 11;
+    bool isExist = 11;
+    int32 limit = 12;
+    repeated OrderItemData items = 13;
 }
 
 message OrderPizzaResponse {
     string message = 1;
     string status = 2;
     int32 id = 3;
-    repeated int32 itemIds = 4;
+    repeated int32 itemIds= 4;
     google.protobuf.Timestamp date = 5;
+    bool isExist = 6;
+    repeated float cost = 7;
 }
