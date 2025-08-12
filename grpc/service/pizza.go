@@ -46,6 +46,13 @@ func (s *PizzaService) GetPizzaById(ctx context.Context, req *pizza.GetPizzaById
 
 func (s *PizzaService) UpdatePizza(ctx context.Context, req *pizza.UpdatePizzaRequest) (*pizza.UpdatePizzaResponse, error) {
 
+	_, err := s.pizzaPostgres.Pizza().GetPizzaData(ctx, &pizza.CartItems{
+		PizzaId: req.Id,
+	})
+	if err != nil {
+		return nil, err
+	}
+
 	resp, err := s.pizzaPostgres.Pizza().UpdatePizza(ctx, req)
 	if err != nil {
 		return nil, err
