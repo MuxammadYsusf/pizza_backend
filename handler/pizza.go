@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	c "github/http/copy/task4/constants"
 	"github/http/copy/task4/generated/pizza"
 	"strconv"
@@ -106,7 +105,6 @@ func (h *Handler) DeletePizza(ctx *gin.Context) {
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		fmt.Println("HERE?")
 		ctx.JSON(c.BadReq, gin.H{"error": err.Error()})
 		return
 	}

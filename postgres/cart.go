@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 	"github/http/copy/task4/generated/pizza"
 	"github/http/copy/task4/models"
 	"time"
@@ -272,8 +271,6 @@ func (c *cart) GetCartrHistory(ctx context.Context, req *pizza.GetCartHistoryReq
 func (c *cart) GetCartItemHistory(ctx context.Context, id int32) (*pizza.GetCarItemtHistoryResponse, error) {
 
 	var cart models.CartIeamHistory
-
-	fmt.Println("req.CartHistoryId", id)
 
 	query := `SELECT oi.pizza_id, oi.cost, oi.quantity
 	FROM order_item AS oi

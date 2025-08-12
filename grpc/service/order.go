@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	c "github/http/copy/task4/constants"
 	"github/http/copy/task4/generated/pizza"
 	"time"
@@ -77,8 +76,6 @@ func (s *PizzaService) OrderPizza(ctx context.Context, req *pizza.OrderPizzaRequ
 		if err != nil {
 			return nil, err
 		}
-
-		fmt.Println("req.CartId", req.CartId)
 
 		isActive := false
 
