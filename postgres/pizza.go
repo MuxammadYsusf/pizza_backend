@@ -87,7 +87,7 @@ func (p *pizzas) GetPizzaById(ctx context.Context, req *pizza.GetPizzaByIdReques
 
 func (p *pizzas) GetPizzas(ctx context.Context, req *pizza.GetPizzasRequest) (*pizza.GetPizzasResponse, error) {
 
-	query := `SELECT name, cost, photo FROM pizza`
+	query := `SELECT name, cost, photo FROM pizza ORDER BY id ASC`
 
 	rows, err := p.db.Query(query)
 	if err != nil {
