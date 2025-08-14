@@ -49,14 +49,15 @@ func (p *pizzas) CreatePizzaType(ctx context.Context, req *pizza.CreatePizzaRequ
 
 func (p *pizzas) CreatePizza(ctx context.Context, req *pizza.CreatePizzaRequest) (*pizza.CreatePizzaResponse, error) {
 
-	query := `INSERT INTO pizza(name, cost, type_id) 
-	VALUES($1, $2, $3)`
+	query := `INSERT INTO pizza(name, cost, type_id, photo) 
+	VALUES($1, $2, $3, $4)`
 
 	_, err := p.db.Exec(
 		query,
 		req.Name,
 		req.Price,
 		req.TypeId,
+		req.Photo,
 	)
 	if err != nil {
 		return nil, err
@@ -70,9 +71,9 @@ func (p *pizzas) CreatePizza(ctx context.Context, req *pizza.CreatePizzaRequest)
 func (p *pizzas) GetPizzaById(ctx context.Context, req *pizza.GetPizzaByIdRequest) (*pizza.GetPizzaByIdResponse, error) {
 	var pizzas models.Pizza
 
-	query := `SELECT name, cost FROM pizza WHERE id = $1 AND type_id= $2`
+	query := `SELECT name, cost, photo FROM pizza WHERE id = $1 AND type_id= $2`
 
-	err := p.db.QueryRow(query, req.Id, req.TypeId).Scan(&pizzas.Name, &pizzas.Price)
+	err := p.db.QueryRow(query, req.Id, req.TypeId).Scan(&pizzas.Name, &pizzas.Price, &pizzas.Photo)
 	if err != nil {
 		return nil, err
 	}
@@ -80,12 +81,13 @@ func (p *pizzas) GetPizzaById(ctx context.Context, req *pizza.GetPizzaByIdReques
 	return &pizza.GetPizzaByIdResponse{
 		Name:  pizzas.Name,
 		Price: pizzas.Price,
+		Photo: pizzas.Photo,
 	}, nil
 }
 
 func (p *pizzas) GetPizzas(ctx context.Context, req *pizza.GetPizzasRequest) (*pizza.GetPizzasResponse, error) {
 
-	query := `SELECT name, cost FROM pizza`
+	query := `SELECT name, cost, photo FROM pizza`
 
 	rows, err := p.db.Query(query)
 	if err != nil {
@@ -97,15 +99,16 @@ func (p *pizzas) GetPizzas(ctx context.Context, req *pizza.GetPizzasRequest) (*p
 	var pizzas []*pizza.Pizzas
 
 	for rows.Next() {
-		var name string
+		var name, photo string
 		var price float32
-		if err := rows.Scan(&name, &price); err != nil {
+		if err := rows.Scan(&name, &price, &photo); err != nil {
 			return nil, err
 		}
 
 		pizzas = append(pizzas, &pizza.Pizzas{
 			Name:  name,
 			Price: price,
+			Photo: photo,
 		})
 	}
 
@@ -116,7 +119,7 @@ func (p *pizzas) GetPizzas(ctx context.Context, req *pizza.GetPizzasRequest) (*p
 
 func (p *pizzas) UpdatePizza(ctx context.Context, req *pizza.UpdatePizzaRequest) (*pizza.UpdatePizzaResponse, error) {
 
-	query := `UPDATE pizza SET name = $3, cost = $4 WHERE id = $1 AND type_id = $2`
+	query := `UPDATE pizza SET name = $3, cost = $4, photo = $5 WHERE id = $1 AND type_id = $2`
 
 	_, err := p.db.Exec(
 		query,
@@ -124,6 +127,7 @@ func (p *pizzas) UpdatePizza(ctx context.Context, req *pizza.UpdatePizzaRequest)
 		req.TypeId,
 		req.Name,
 		req.Price,
+		req.Photo,
 	)
 
 	if err != nil {

@@ -15,6 +15,7 @@ type Pizza struct {
 	Price    float32 `json:"price"`
 	TypeId   int32   `json:"typeId"`
 	Quantity int32   `json:"quantity"`
+	Photo    string  `json:"photo"`
 }
 
 type Cart struct {

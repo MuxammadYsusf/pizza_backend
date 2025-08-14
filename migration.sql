@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS pizza (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
     cost FLOAT NOT NULL,
+    photo TEXT NOT NULL,
     type_id INT NOT NULL,
     FOREIGN KEY (type_id) REFERENCES types(id) ON DELETE CASCADE
 );
