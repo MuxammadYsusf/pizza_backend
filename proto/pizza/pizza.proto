@@ -38,6 +38,7 @@ message Pizzas {
     string name = 1;
     float price = 2;
     string photo = 3;
+    int32 id = 4;
 }
 
 message GetPizzaByIdRequest {

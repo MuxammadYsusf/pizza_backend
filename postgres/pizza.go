@@ -87,7 +87,7 @@ func (p *pizzas) GetPizzaById(ctx context.Context, req *pizza.GetPizzaByIdReques
 
 func (p *pizzas) GetPizzas(ctx context.Context, req *pizza.GetPizzasRequest) (*pizza.GetPizzasResponse, error) {
 
-	query := `SELECT name, cost, photo FROM pizza ORDER BY id ASC`
+	query := `SELECT id, name, cost, photo FROM pizza ORDER BY id ASC`
 
 	rows, err := p.db.Query(query)
 	if err != nil {
@@ -99,16 +99,16 @@ func (p *pizzas) GetPizzas(ctx context.Context, req *pizza.GetPizzasRequest) (*p
 	var pizzas []*pizza.Pizzas
 
 	for rows.Next() {
-		var name, photo string
-		var price float32
-		if err := rows.Scan(&name, &price, &photo); err != nil {
+		var p models.Pizza
+		if err := rows.Scan(&p.ID, &p.Name, &p.Price, &p.Photo); err != nil {
 			return nil, err
 		}
 
 		pizzas = append(pizzas, &pizza.Pizzas{
-			Name:  name,
-			Price: price,
-			Photo: photo,
+			Id:    p.ID,
+			Name:  p.Name,
+			Price: p.Price,
+			Photo: p.Photo,
 		})
 	}
 
