@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"github/http/copy/task4/generated/pizza"
 	"github/http/copy/task4/models"
 	"time"
@@ -22,8 +23,11 @@ type CartRepo interface {
 	DecreasePizzaQuantity(ctx context.Context, req *pizza.CartItems) (*pizza.CartItemsResp, error)
 	GetCartId(ctx context.Context, userId int32) (*pizza.CartItemsResp, error)
 	GetCartItemId(ctx context.Context, pizzaId int32, cartId int32) (*pizza.CartItemsResp, error)
-	GetFromCart(ctx context.Context, id int32) (*pizza.CartItemsResp, error)
+	GetFromCart(ctx context.Context, Id int32, pizzaId int32) (*pizza.CartItemsResp, error)
 	CheckIsCartExist(ctx context.Context, req *pizza.CheckIsCartExistRequest) (*pizza.CheckIsCartExistResponse, error)
+	ListCartItems(ctx context.Context, cartId int32) ([]*pizza.CartItems, error)
+	ClearTheCartById(ctx context.Context, cartId int32, pizzaId int32) (*pizza.CartItemsResp, error)
+	ClearTheCart(ctx context.Context, cartId int32) (*pizza.CartItemsResp, error)
 	GetTotalCost(ctx context.Context, id int32) (*pizza.CartItemsResp, error)
 	CloseTheCart(ctx context.Context, cartId int32, isActive bool) (*pizza.CartResponse, error)
 	GetCartrHistory(ctx context.Context, req *pizza.GetCartHistoryRequest) (*pizza.GetCartHistoryResponse, error)
@@ -98,7 +102,7 @@ func (c *cart) IncreasePizzaQuantity(ctx context.Context, req *pizza.CartRequest
 
 	_, err := c.db.Exec(
 		query,
-		req.Id,
+		req.CartItemId,
 		req.PizzaId,
 		req.Quantity,
 	)
@@ -119,20 +123,29 @@ func (c *cart) DecreasePizzaQuantity(ctx context.Context, req *pizza.CartItems) 
 		query = `
 	DELETE FROM cart_item WHERE id = $1
 	`
+		_, err := c.db.Exec(
+			query,
+			req.Id,
+		)
+		if err != nil {
+			return nil, err
+		}
+
 	} else if req.Quantity > 1 {
 		query = `
 	UPDATE cart_item SET quantity = $1 WHERE id = $2
 	`
+		_, err := c.db.Exec(
+			query,
+			req.Quantity,
+			req.Id,
+		)
+		if err != nil {
+			return nil, err
+		}
+
 	} else {
 		return nil, errors.New("this pizza is bot exists in your cart")
-	}
-	_, err := c.db.Exec(
-		query,
-		req.Quantity,
-		req.Id,
-	)
-	if err != nil {
-		return nil, err
 	}
 
 	return &pizza.CartItemsResp{
@@ -149,6 +162,7 @@ func (c *cart) GetCartId(ctx context.Context, userId int32) (*pizza.CartItemsRes
 
 	err := c.db.QueryRow(query, userId).Scan(&cartId)
 	if err != nil && err != sql.ErrNoRows {
+		fmt.Println("HERE???", err)
 		return nil, err
 	}
 
@@ -174,23 +188,56 @@ func (c *cart) GetCartItemId(ctx context.Context, pizzaId int32, cartId int32) (
 	}, nil
 }
 
-func (c *cart) GetFromCart(ctx context.Context, Id int32) (*pizza.CartItemsResp, error) {
+func (c *cart) GetFromCart(ctx context.Context, Id int32, pizzaId int32) (*pizza.CartItemsResp, error) {
 
 	query := `
-    SELECT pizza_id, cart_id, quantity, pizza_type_id FROM cart_item WHERE cart_id = $1
+    SELECT pizza_id, cart_id, quantity, pizza_type_id FROM cart_item WHERE pizza_id = $1 AND cart_id = $2
 `
-	var pizzaId, cartId, quantity, pizzaTypeId int32
-	err := c.db.QueryRow(query, Id).Scan(&pizzaId, &cartId, &quantity, &pizzaTypeId)
+	var scanPizzaId, cartId, quantity, pizzaTypeId int32
+	err := c.db.QueryRow(query, pizzaId, Id).Scan(&scanPizzaId, &cartId, &quantity, &pizzaTypeId)
 	if err != nil && err != sql.ErrNoRows {
 		return nil, err
 	}
 
 	return &pizza.CartItemsResp{
 		CartId:      cartId,
-		PizzaId:     pizzaId,
+		PizzaId:     scanPizzaId,
 		Quantity:    quantity,
 		PizzaTypeId: pizzaTypeId,
 	}, nil
+}
+
+func (c *cart) ListCartItems(ctx context.Context, cartId int32) ([]*pizza.CartItems, error) {
+
+	const q = `
+        SELECT
+            ci.pizza_id,
+            p.name,
+            p.cost,
+            p.photo,
+            SUM(ci.quantity),
+            MAX(ci.pizza_type_id) AS pizza_type_id
+        FROM cart_item ci
+        JOIN pizza p ON p.id = ci.pizza_id
+        WHERE ci.cart_id = $1
+        GROUP BY ci.pizza_id, p.name, p.cost, p.photo
+        ORDER BY p.name;
+    `
+	rows, err := c.db.QueryContext(ctx, q, cartId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	items := []*pizza.CartItems{}
+	for rows.Next() {
+		var it pizza.CartItems
+		if err := rows.Scan(&it.PizzaId, &it.Name, &it.Cost, &it.Photo, &it.Quantity, &it.PizzaTypeId); err != nil {
+			return nil, err
+		}
+		items = append(items, &it)
+	}
+	return items, rows.Err()
 }
 
 func (c *cart) GetTotalCost(ctx context.Context, id int32) (*pizza.CartItemsResp, error) {
@@ -210,6 +257,43 @@ func (c *cart) GetTotalCost(ctx context.Context, id int32) (*pizza.CartItemsResp
 
 	return &pizza.CartItemsResp{
 		TotalCost: total_cost,
+	}, nil
+}
+
+func (c *cart) ClearTheCart(ctx context.Context, cartId int32) (*pizza.CartItemsResp, error) {
+
+	query := `DELETE FROM cart_item WHERE cart_id = $1`
+
+	_, err := c.db.Exec(
+		query,
+		cartId,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &pizza.CartItemsResp{
+		Message: "success",
+	}, nil
+}
+
+func (c *cart) ClearTheCartById(ctx context.Context, cartId int32, pizzaId int32) (*pizza.CartItemsResp, error) {
+
+	query := `DELETE FROM cart_item WHERE cart_id = $1 AND pizza_id = $2`
+
+	_, err := c.db.Exec(
+		query,
+		cartId,
+		pizzaId,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &pizza.CartItemsResp{
+		Message: "success",
 	}, nil
 }
 

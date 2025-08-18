@@ -2,6 +2,7 @@ package handler
 
 import (
 	"errors"
+	"fmt"
 	"github/http/copy/task4/config"
 	c "github/http/copy/task4/constants"
 	"github/http/copy/task4/security"
@@ -12,6 +13,8 @@ import (
 )
 
 func (h *Handler) AuthMiddleware(ctx *gin.Context) {
+
+	fmt.Println("1")
 	if ctx.Request.Method == "PRI" && ctx.Request.RequestURI == "*" {
 		ctx.JSON(c.OK, "")
 	}
@@ -48,6 +51,8 @@ func (h *Handler) AuthMiddleware(ctx *gin.Context) {
 
 func (h *Handler) AdminOnlyMiddleware(ctx *gin.Context) {
 	h.AuthMiddleware(ctx)
+
+	fmt.Println("11")
 
 	if ctx.IsAborted() {
 		return

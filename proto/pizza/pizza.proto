@@ -82,6 +82,9 @@ service CartService{
     rpc GetTotalCost(CartItems) returns (CartItemsResp);
     rpc GetCartHistory(GetCartHistoryRequest) returns (GetCartHistoryResponse);
     rpc GetCartItemHistory(GetCarItemtHistoryRequest) returns (GetCarItemtHistoryResponse);
+    rpc GetFromCart(CartItems) returns (CartItemsResp);
+    rpc ClearTheCart(CartItems) returns (CartItemsResp);
+    rpc ClearTheCartById(CartItems) returns (CartItemsResp);
 }
 message CheckIsCartExistRequest {
     int32 userId = 1;
@@ -121,6 +124,8 @@ message CartItems {
     int32 cartId = 7;
     int32 userId = 8;
     repeated CartItems items = 9;
+    string name = 10;
+    string photo = 11;
 }
 
 message CartItemsResp {

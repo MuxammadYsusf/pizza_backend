@@ -44,7 +44,7 @@ func main() {
 	r := gin.Default()
 
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:5173"},
+		AllowOrigins:     []string{"http://localhost:5179"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		AllowCredentials: true,
@@ -57,10 +57,13 @@ func main() {
 	{
 		auth.GET("/pizzas/get", cont.GetPizzas)
 		auth.GET("/pizzas/get/:id/:typeId", cont.GetPizzaById)
-		auth.POST("/pizzas/cart/:id", cont.PutPizzaIntoCart)
+		auth.POST("/pizzas/cart", cont.PutPizzaIntoCart)
 		auth.PUT("/pizzas/decrease", cont.DecreasePizzaQuantity)
 		auth.GET("/pizzas/get/pizza-cost/:id", cont.GetPizzaCost)
 		auth.GET("/pizzas/get/total-cost/:id", cont.GetTotalCost)
+		auth.GET("/pizzas/cart", cont.GetFromCart)
+		auth.DELETE("/pizzas/cart/:pizzaId", cont.ClearTheCartById)
+		auth.DELETE("/pizzas/cart", cont.ClearTheCart)
 		auth.POST("pizzas/order", cont.OrderPizza)
 		auth.GET("/pizzas/history", cont.GetCartHistory)
 		auth.GET("/pizzas/history/:id", cont.GetCartItemHistory)
@@ -74,10 +77,13 @@ func main() {
 		admin.GET("/pizzas/get/:id/:typeId", cont.GetPizzaById)
 		admin.PUT("/pizzas/update", cont.UpdatePizza)
 		admin.DELETE("/pizzas/delete/:id", cont.DeletePizza)
-		admin.POST("/pizzas/cart/:id", cont.PutPizzaIntoCart)
+		admin.POST("/pizzas/cart", cont.PutPizzaIntoCart)
 		admin.PUT("/pizzas/decrease", cont.DecreasePizzaQuantity)
 		admin.GET("/pizzas/get/pizza-cost/:id", cont.GetPizzaCost)
 		admin.GET("/pizzas/get/total-cost/:id", cont.GetTotalCost)
+		admin.GET("/pizzas/cart", cont.GetFromCart)
+		admin.DELETE("/pizzas/cart/:pizzaId", cont.ClearTheCartById)
+		admin.DELETE("/pizzas/cart", cont.ClearTheCart)
 		admin.POST("pizzas/order", cont.OrderPizza)
 		admin.GET("/pizzas/history", cont.GetCartHistory)
 		admin.GET("/pizzas/history/:id", cont.GetCartItemHistory)
