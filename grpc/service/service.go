@@ -17,15 +17,15 @@ type PizzaService struct {
 }
 
 type AuthService struct {
-	loginPostgres postgres.NewPostgresI
-	service       client.ServiceManager
+	authPostgres postgres.NewPostgresI
+	service      client.ServiceManager
 	session.UnimplementedAuthServiceServer
 }
 
 func NewAuthnService(db *sql.DB, service client.ServiceManager) *AuthService {
 	return &AuthService{
-		loginPostgres: postgres.NewPostgres(db),
-		service:       service,
+		authPostgres: postgres.NewPostgres(db),
+		service:      service,
 	}
 }
 

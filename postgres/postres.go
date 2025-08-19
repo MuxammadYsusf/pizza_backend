@@ -6,7 +6,7 @@ type NewPostgresI interface {
 	Pizza() PizzaRepo
 	Cart() CartRepo
 	Order() OrderRepo
-	Login() AuthRepo
+	Auth() AuthRepo
 }
 
 type store struct {
@@ -29,7 +29,7 @@ func (s *store) Order() OrderRepo {
 	return s.order
 }
 
-func (s *store) Login() AuthRepo {
+func (s *store) Auth() AuthRepo {
 	return s.auth
 }
 

@@ -6,6 +6,15 @@ CREATE TABLE IF NOT EXISTS users (
     role TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS sessions (
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL,
+    token TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    expired_at TIMESTAMP NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS pizza (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,

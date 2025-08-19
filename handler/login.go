@@ -3,8 +3,8 @@ package handler
 import (
 	c "github/http/copy/task4/constants"
 	"github/http/copy/task4/generated/session"
-	"github/http/copy/task4/security"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -41,13 +41,28 @@ func (h *Handler) Login(ctx *gin.Context) {
 		return
 	}
 
-	tokenStr, err := security.GenerateJWTToken(int(resp.UserId), resp.Role)
+	ctx.JSON(http.StatusOK, resp)
+}
+
+func (h *Handler) Logout(ctx *gin.Context) {
+
+	auth := ctx.GetHeader("Authorization")
+	token := strings.TrimSpace(strings.TrimPrefix(auth, "Bearer "))
+	if token == "" {
+		ctx.JSON(c.UnAuth, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	req := session.LogoutRequest{
+		Token: token,
+	}
+
+	resp, err := h.GRPCClient.Auth().Logout(ctx, &req)
 	if err != nil {
 		ctx.JSON(c.Err, gin.H{"error": err.Error()})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, &gin.H{
-		"token": tokenStr,
-	})
+	ctx.JSON(c.OK, resp)
+
 }

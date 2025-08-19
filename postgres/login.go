@@ -6,8 +6,7 @@ import (
 	"fmt"
 	"github/http/copy/task4/generated/session"
 	"github/http/copy/task4/models"
-
-	"golang.org/x/crypto/bcrypt"
+	"time"
 )
 
 type auth struct {
@@ -16,7 +15,13 @@ type auth struct {
 
 type AuthRepo interface {
 	Register(ctx context.Context, req *session.RegisterRequest) (*session.RegisterResponse, error)
-	Login(ctx context.Context, req *session.LoginRequest) (*session.LoginResponse, error)
+	GetUserData(ctx context.Context, req *session.LoginRequest) (*session.LoginResponse, error)
+	InsertSession(ctx context.Context, req *session.InsertSessionRequest) (*session.InsertSessionResponse, error)
+	Logout(ctx context.Context, req *session.LogoutRequest) (*session.LogoutResponse, error)
+	IsLogined(ctx context.Context, req *session.LogoutRequest) (*session.LogoutResponse, error)
+	GetSessionByID(ctx context.Context, id int) (*models.Session, error)
+	GetSessionData(ctx context.Context, id int) (*models.Session, error)
+	GetSessionId(ctx context.Context) (*models.Session, error)
 }
 
 func NewAuth(db *sql.DB) AuthRepo {
@@ -36,11 +41,10 @@ func (a *auth) IsNameTaken(name string) (bool, error) {
 	return exists, nil
 }
 
-func (a *auth) IsEmailTaken(name string) (bool, error) {
+func (a *auth) IsEmailTaken(email string) (bool, error) {
 
 	var exists bool
-	// Suggestion: parameter is named "name", but this function checks email. Consider renaming parameter to "email" for clarity.
-	err := a.db.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE email = $1)", name /* <-- Here */ ).Scan(&exists)
+	err := a.db.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE email = $1)", email).Scan(&exists)
 	if err != nil {
 		return false, err
 	}
@@ -75,24 +79,13 @@ func (a *auth) Register(ctx context.Context, req *session.RegisterRequest) (*ses
 		return nil, fmt.Errorf("user already exists")
 	}
 
-	hashedPassword, err := HashPassword(req.Password)
-	if err != nil {
-		tx.Rollback()
-		return nil, err
-	}
-	// Note: You assign the hashed password to req.Password,
-	// but it's not needed since you already use hashedPassword in Exec below.
-	req.Password = hashedPassword
-
-	// defer tx.Commit() <-- Suggestion: Remove this line, as it will commit immediately after the function returns, which is not what you want.
-
 	query := `INSERT INTO users(name, password, email, role)
 	VALUES($1, $2, $3, $4)`
 
 	_, err = tx.Exec(
 		query,
 		req.Username,
-		hashedPassword, // <-- Here you use the hashed password directly.
+		req.Password,
 		req.Email,
 		req.Role,
 	)
@@ -101,7 +94,6 @@ func (a *auth) Register(ctx context.Context, req *session.RegisterRequest) (*ses
 		return nil, err
 	}
 
-	// Suggestion: Commit only here, after all checks and inserts are successful.
 	if err := tx.Commit(); err != nil {
 		return nil, err
 	}
@@ -111,45 +103,134 @@ func (a *auth) Register(ctx context.Context, req *session.RegisterRequest) (*ses
 	}, nil
 }
 
-func (a *auth) Login(ctx context.Context, req *session.LoginRequest) (*session.LoginResponse, error) {
+func (a *auth) GetUserData(ctx context.Context, req *session.LoginRequest) (*session.LoginResponse, error) {
 
-	var user models.User
+	var (
+		user models.User
+	)
 
 	query := `SELECT id, name, password, role FROM users WHERE name = $1`
 
 	err := a.db.QueryRow(query, req.Username).Scan(&user.ID, &user.Username, &user.Password, &user.Role)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			// Security tip: For login errors, it's safer to always return a generic error like "invalid credentials"
-			// to avoid leaking info about which usernames exist.
-			return nil, fmt.Errorf("invalid name or password")
+			return nil, err
 		}
 		return nil, err
 	}
 
-	if !CheckPasswordHash(req.Password, user.Password) {
-		return nil, fmt.Errorf("invalid name or password") // <-- Security tip: Same as above, avoid specific error messages.	
-	}
-
 	return &session.LoginResponse{
-		Message: "success",
-		UserId:  int32(user.ID),
-		Role:    user.Role,
+		Id:       user.ID,
+		Name:     user.Username,
+		Password: user.Password,
+		Role:     user.Role,
 	}, nil
 }
 
-func HashPassword(password string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	return string(bytes), err
-}
+func (a *auth) InsertSession(ctx context.Context, req *session.InsertSessionRequest) (*session.InsertSessionResponse, error) {
 
-func CheckPasswordHash(password, hash string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	query := `INSERT INTO sessions(id, user_id, created_at, expired_at)
+	VALUES($1, $2, $3, $4)`
+
+	_, err := a.db.Exec(
+		query,
+		req.Id,
+		req.UserId,
+		req.CreatedAt.AsTime(),
+		req.ExpiredAt.AsTime(),
+	)
 	if err != nil {
-		return err == nil
+
+		return nil, err
 	}
 
-	return err == nil
+	return &session.InsertSessionResponse{
+		Message: "success",
+	}, nil
 }
 
-// Great job!
+func (a *auth) Logout(ctx context.Context, req *session.LogoutRequest) (*session.LogoutResponse, error) {
+
+	query := `UPDATE sessions SET expired_at = NOW() WHERE id = $1`
+
+	_, err := a.db.Exec(
+		query,
+		req.Id,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, err
+		}
+		return nil, err
+	}
+
+	return &session.LogoutResponse{
+		Message: "success",
+	}, nil
+}
+
+func (a *auth) IsLogined(ctx context.Context, req *session.LogoutRequest) (*session.LogoutResponse, error) {
+
+	var expiredAt time.Time
+
+	query := `SELECT expired_at FROM sessions WHERE token = $1`
+
+	err := a.db.QueryRow(query, req.Token).Scan(&expiredAt)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, err
+		}
+		return nil, err
+	}
+
+	return &session.LogoutResponse{
+		Message: "success",
+	}, nil
+}
+
+func (a *auth) GetSessionByID(ctx context.Context, id int) (*models.Session, error) {
+
+	var session models.Session
+
+	query := `SELECT id, user_id, created_at, expired_at FROM sessions WHERE id = $1`
+
+	err := a.db.QueryRow(query, id).Scan(&session.ID, &session.UserID, &session.CreatedAt, &session.ExpiredAt)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, err
+		}
+		return nil, err
+	}
+
+	return &session, nil
+}
+
+func (a *auth) GetSessionData(ctx context.Context, id int) (*models.Session, error) {
+
+	var session models.Session
+
+	query := `SELECT * FROM sessions WHERE id = $1`
+
+	err := a.db.QueryRow(query, id).Scan(&session.ID, &session.UserID, &session.CreatedAt, &session.ExpiredAt)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, err
+	}
+
+	return &session, nil
+}
+
+func (a *auth) GetSessionId(ctx context.Context) (*models.Session, error) {
+
+	var session models.Session
+
+	query := `SELECT id FROM sessions ORDER BY id DESC LIMIT 1`
+
+	err := a.db.QueryRow(query).Scan(&session.ID)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, err
+	}
+
+	return &models.Session{
+		ID: session.ID,
+	}, nil
+}

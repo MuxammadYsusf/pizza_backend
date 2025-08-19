@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"github/http/copy/task4/generated/pizza"
 	"github/http/copy/task4/models"
 )
@@ -116,7 +115,6 @@ func (s *PizzaService) DecreasePizzaQuantity(ctx context.Context, req *pizza.Car
 
 	resp, err := s.pizzaPostgres.Cart().DecreasePizzaQuantity(ctx, req)
 	if err != nil {
-		fmt.Println("err 3-->", err)
 		return nil, err
 	}
 
@@ -151,8 +149,6 @@ func (s *PizzaService) ClearTheCart(ctx context.Context, req *pizza.CartItems) (
 
 	req.CartId = resp.CartId
 
-	fmt.Println("req.CartId -->", req.CartId)
-
 	resp, err = s.pizzaPostgres.Cart().ClearTheCart(ctx, req.CartId)
 	if err != nil {
 		return nil, err
@@ -168,8 +164,6 @@ func (s *PizzaService) ClearTheCartById(ctx context.Context, req *pizza.CartItem
 	}
 
 	req.CartId = resp.CartId
-
-	fmt.Println("req.CartId -->", req.CartId)
 
 	resp, err = s.pizzaPostgres.Cart().ClearTheCartById(ctx, req.CartId, req.PizzaId)
 	if err != nil {

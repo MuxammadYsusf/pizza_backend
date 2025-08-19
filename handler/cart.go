@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	c "github/http/copy/task4/constants"
 	"github/http/copy/task4/generated/pizza"
 	"strconv"
@@ -105,7 +104,6 @@ func (h *Handler) ClearTheCartById(ctx *gin.Context) {
 
 	id, err := strconv.Atoi(IdStr)
 	if err != nil {
-		fmt.Println("HIERE")
 		ctx.JSON(c.BadReq, gin.H{"error": err.Error()})
 		return
 	}

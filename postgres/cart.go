@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 	"github/http/copy/task4/generated/pizza"
 	"github/http/copy/task4/models"
 	"time"
@@ -131,7 +130,7 @@ func (c *cart) DecreasePizzaQuantity(ctx context.Context, req *pizza.CartItems) 
 			return nil, err
 		}
 
-	} else if req.Quantity > 1 {
+	} else if req.Quantity >= 1 {
 		query = `
 	UPDATE cart_item SET quantity = $1 WHERE id = $2
 	`
@@ -145,7 +144,7 @@ func (c *cart) DecreasePizzaQuantity(ctx context.Context, req *pizza.CartItems) 
 		}
 
 	} else {
-		return nil, errors.New("this pizza is bot exists in your cart")
+		return nil, errors.New("this pizza is not exists in your cart")
 	}
 
 	return &pizza.CartItemsResp{
@@ -162,7 +161,6 @@ func (c *cart) GetCartId(ctx context.Context, userId int32) (*pizza.CartItemsRes
 
 	err := c.db.QueryRow(query, userId).Scan(&cartId)
 	if err != nil && err != sql.ErrNoRows {
-		fmt.Println("HERE???", err)
 		return nil, err
 	}
 

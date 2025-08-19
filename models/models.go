@@ -3,7 +3,7 @@ package models
 import "time"
 
 type User struct {
-	ID       int    `json:"id"`
+	ID       int32  `json:"id"`
 	Username string `json:"username"`
 	Password string `json:"password"`
 	Role     string `json:"role"`
@@ -50,4 +50,11 @@ type Order struct {
 	IsOrdered bool      `json:"isOrdered"`
 	UserId    int32     `json:"userId"`
 	Status    string    `json:"status"`
+}
+
+type Session struct {
+	ID        int       `json:"id"`
+	UserID    int       `json:"userId"`
+	CreatedAt time.Time `json:"createdAt"`
+	ExpiredAt time.Time `json:"expiresAt"`
 }

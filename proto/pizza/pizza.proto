@@ -13,6 +13,7 @@ service PizzaService{
     rpc UpdatePizza(UpdatePizzaRequest) returns (UpdatePizzaResponse);
     rpc DeletePizza(DeletePizzaRequest) returns (DeletePizzaResponse);
     rpc GetPizzaCost(CartItems) returns (CartItemsResp);
+    rpc ClearTheCartById(CartItems) returns (CartItemsResp);
 }
 
 message CreatePizzaRequest {

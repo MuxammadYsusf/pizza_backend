@@ -10,15 +10,20 @@ import (
 type Claims struct {
 	UserId int    `json:"userId"`
 	Role   string `json:"role"`
+	ID     int    `json:"id"`
 	jwt.StandardClaims
 }
 
-func GenerateJWTToken(userId int, role string) (string, error) {
+func GenerateJWTToken(userId, id int, role string) (string, error) {
 	expiredTime := jwt.TimeFunc().Add(time.Hour * 24)
 
+	if expiredTime.Before(time.Now()) || expiredTime.Equal(time.Now()) {
+
+	}
 	claims := Claims{
 		UserId: userId,
 		Role:   role,
+		ID:     id,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expiredTime.Unix(),
 		},

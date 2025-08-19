@@ -27,7 +27,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	cont := handler.NewHandler(clients)
+	cont := handler.NewHandler(clients, conn)
 
 	grpcServer := server.NewServer(conn, clients)
 
@@ -67,9 +67,10 @@ func main() {
 		auth.POST("pizzas/order", cont.OrderPizza)
 		auth.GET("/pizzas/history", cont.GetCartHistory)
 		auth.GET("/pizzas/history/:id", cont.GetCartItemHistory)
+		auth.PUT("/pizzas/logout", cont.Logout)
 	}
 
-	admin := r.Group("/admin", cont.AdminOnlyMiddleware)
+	admin := r.Group("/admin", cont.AuthMiddleware)
 	{
 		admin.POST("/pizzas/create/type", cont.CreatePizzaType)
 		admin.POST("/pizzas/create", cont.CreatePizza)
@@ -87,6 +88,7 @@ func main() {
 		admin.POST("pizzas/order", cont.OrderPizza)
 		admin.GET("/pizzas/history", cont.GetCartHistory)
 		admin.GET("/pizzas/history/:id", cont.GetCartItemHistory)
+		admin.PUT("/pizzas/logout", cont.Logout)
 	}
 
 	r.Run(cfg.HttpPort)

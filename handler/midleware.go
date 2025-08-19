@@ -1,23 +1,20 @@
 package handler
 
 import (
+	"database/sql"
 	"errors"
-	"fmt"
 	"github/http/copy/task4/config"
 	c "github/http/copy/task4/constants"
 	"github/http/copy/task4/security"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
+	"github.com/spf13/cast"
 )
 
 func (h *Handler) AuthMiddleware(ctx *gin.Context) {
-
-	fmt.Println("1")
-	if ctx.Request.Method == "PRI" && ctx.Request.RequestURI == "*" {
-		ctx.JSON(c.OK, "")
-	}
 
 	authHeader := ctx.GetHeader("Authorization")
 	if authHeader == "" {
@@ -31,7 +28,14 @@ func (h *Handler) AuthMiddleware(ctx *gin.Context) {
 		return
 	}
 
+	expiredTime := jwt.TimeFunc().Add(time.Hour * 24)
+
 	claims := security.Claims{}
+
+	if expiredTime.Before(time.Now()) || expiredTime.Equal(time.Now()) {
+		ctx.JSON(c.UnAuth, gin.H{"error": "unauthorized"})
+		return
+	}
 
 	token, err := jwt.ParseWithClaims(tokenStr[1], &claims, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -41,31 +45,41 @@ func (h *Handler) AuthMiddleware(ctx *gin.Context) {
 	})
 
 	if err != nil || !token.Valid {
+
 		ctx.JSON(c.UnAuth, gin.H{"error": "unauthorized"})
 		return
 	}
 
-	ctx.Set("userId", claims.UserId)
-	ctx.Next()
-}
-
-func (h *Handler) AdminOnlyMiddleware(ctx *gin.Context) {
-	h.AuthMiddleware(ctx)
-
-	fmt.Println("11")
-
-	if ctx.IsAborted() {
+	data, err := h.DB.Auth().GetSessionId(ctx)
+	if err != nil {
+		ctx.JSON(c.Err, gin.H{"error": err.Error()})
 		return
 	}
 
-	tokenStr := strings.TrimPrefix(ctx.GetHeader("Authorization"), "Bearer ")
-	token, _, _ := new(jwt.Parser).ParseUnverified(tokenStr, jwt.MapClaims{})
-	role := token.Claims.(jwt.MapClaims)["role"].(string)
+	claims.ID = data.ID
+
+	session, err := h.DB.Auth().GetSessionByID(ctx, cast.ToInt(claims.ID))
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		ctx.JSON(c.UnAuth, gin.H{"error": "unauthorized"})
+		return
+	} else if err != nil {
+		ctx.JSON(c.Err, gin.H{"error": err.Error()})
+		return
+
+	}
+
+	if session.ExpiredAt.Before(time.Now()) || session.ExpiredAt.Equal(time.Now()) {
+		ctx.JSON(c.UnAuth, gin.H{"error": "token expired"})
+		return
+	}
+
+	role := claims.Role
 
 	if role != "admin" {
 		ctx.JSON(c.Forbidden, gin.H{"error": errors.New("no no no mr fish")})
 		return
 	}
 
+	ctx.Set("userId", claims.UserId)
 	ctx.Next()
 }
