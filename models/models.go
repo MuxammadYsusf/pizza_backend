@@ -7,6 +7,7 @@ type User struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 	Role     string `json:"role"`
+	Email    string `json:"email"`
 }
 
 type Pizza struct {
@@ -35,7 +36,7 @@ type CartItems struct {
 	TotalCost   float32 `json:"totalCost"`
 }
 
-type CartIeamHistory struct {
+type CartItemHistory struct {
 	ID          int32   `json:"id"`
 	PizzaId     int32   `json:"pizzaId"`
 	PizzaTypeId int32   `json:"pizzaTypeId"`

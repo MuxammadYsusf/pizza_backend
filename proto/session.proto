@@ -1,0 +1,88 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "genproto/";
+
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+// Global OpenAPI (Swagger v2) metadata.
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  info: {
+    title: "Pizza Service"
+    version: "v1"
+  }
+  consumes: "application/json"
+  produces: "application/json"
+  schemes: HTTP
+  security_definitions: {
+    security: {
+      key: "bearer"
+      value: {
+        type: TYPE_API_KEY
+        name: "Authorization"
+        in: IN_HEADER
+        description: "JWT bearer token. Format: Bearer <access_token>"
+      }
+    }
+  }
+    security: {
+        security_requirement: { key: "bearer" }
+    }
+};
+
+service AuthService {
+  rpc Register(RegisterRequest) returns (RegisterResponse) {
+    option (google.api.http) = {
+      post: "/v1/auth/register"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "auth"
+      summary: "Register a new user"
+      description: "Creates a new user with specified role (role may be ignored / validated server-side)."
+    };
+  }
+
+  rpc Login(LoginRequest) returns (LoginResponse) {
+    option (google.api.http) = {
+      post: "/v1/auth/login"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "auth"
+      summary: "Login user"
+      description: "Authenticates user and returns role and user ID."
+    };
+  }
+}
+
+// RegisterRequest carries information required to create a new user.
+message RegisterRequest {
+  string username = 1;
+  string password = 2;
+  string email    = 3;
+  // role is optional / server may override; restrict basic length.
+  string role     = 4;
+}
+
+message RegisterResponse {
+  string message = 1;
+}
+
+message LoginRequest {
+  string username = 1;
+  string password = 2;
+}
+
+// LoginResponse returns authentication result.
+// NOTE: If you later add tokens, prefer new fields:
+// string access_token = 4;
+// string refresh_token = 5;
+// int64  expires_in = 6;
+message LoginResponse {
+  string message = 1;
+  string role    = 2;
+  int32 userId   = 3;
+}
