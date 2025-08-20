@@ -352,22 +352,33 @@ func (c *cart) GetCartrHistory(ctx context.Context, req *pizza.GetCartHistoryReq
 
 func (c *cart) GetCartItemHistory(ctx context.Context, id int32) (*pizza.GetCarItemtHistoryResponse, error) {
 
-	var cart models.CartIeamHistory
-
 	query := `SELECT oi.pizza_id, oi.cost, oi.quantity
 	FROM order_item AS oi
 	JOIN orders AS o ON o.id = oi.order_id
 	WHERE o.id = $1`
 
-	err := c.db.QueryRow(query, id).Scan(&cart.PizzaId, &cart.Cost, &cart.Quantity)
+	rows, err := c.db.Query(query, id)
 	if err != nil {
 		return nil, err
 	}
 
+	defer rows.Close()
+
+	var carts []*pizza.GetCarItemtHistoryResponse
+	for rows.Next() {
+		var cart models.CartIeamHistory
+		if err := rows.Scan(&cart.PizzaId, &cart.Cost, &cart.Quantity); err != nil {
+			return nil, err
+		}
+
+		carts = append(carts, &pizza.GetCarItemtHistoryResponse{
+			PizzaId:  cart.PizzaId,
+			Cost:     cart.Cost,
+			Quantity: cart.Quantity,
+		})
+	}
+
 	return &pizza.GetCarItemtHistoryResponse{
-		CartHistoryId: id,
-		PizzaId:       cart.PizzaId,
-		Cost:          cart.Cost,
-		Quantity:      cart.Quantity,
+		CartHistory: carts,
 	}, nil
 }
