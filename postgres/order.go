@@ -130,9 +130,6 @@ func (o *orders) GetOrderId(ctx context.Context, req *pizza.OrderPizzaRequest) (
 
 	query := `SELECT id FROM orders WHERE cart_id = $1 AND user_id = $2 ORDER BY cart_id DESC LIMIT 1`
 
-	fmt.Println("req.CartId", req.CartId)
-	fmt.Println("req.USERID", req.UserId)
-
 	err := o.db.QueryRow(query, req.CartId, req.UserId).Scan(&order.ID)
 	if err != nil {
 		return nil, err
@@ -209,9 +206,6 @@ func (o *orders) OrderItem(ctx context.Context, req *pizza.OrderPizzaRequest) (*
 			Message: "already ordered",
 		}, nil
 	}
-
-	fmt.Println("ITEMS", req.Items)
-	fmt.Println("REQ:", req)
 
 	query = `INSERT INTO order_item(pizza_id, cost, quantity, order_id) VALUES`
 	values := []interface{}{}

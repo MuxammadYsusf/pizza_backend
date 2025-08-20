@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	c "github/http/copy/task4/constants"
 	"github/http/copy/task4/generated/pizza"
 	"time"
@@ -30,7 +29,6 @@ func (s *PizzaService) OrderPizza(ctx context.Context, req *pizza.OrderPizzaRequ
 		if len(ois.OrderItems) == 0 {
 			resp, err = s.pizzaPostgres.Order().OrderItem(ctx, req)
 			if err != nil {
-				fmt.Println("err4", err)
 				return nil, err
 			}
 		}
@@ -65,7 +63,6 @@ func (s *PizzaService) OrderPizza(ctx context.Context, req *pizza.OrderPizzaRequ
 
 		resp, err := s.pizzaPostgres.Order().GetOrderId(ctx, req)
 		if err != nil {
-			fmt.Println("err1", err)
 			return nil, err
 		}
 
@@ -73,7 +70,6 @@ func (s *PizzaService) OrderPizza(ctx context.Context, req *pizza.OrderPizzaRequ
 
 		pc, err := s.pizzaPostgres.Pizza().GetAllPizzaCost(ctx, req.CartId)
 		if err != nil {
-			fmt.Println("err2", err)
 			return nil, err
 		}
 
@@ -81,13 +77,11 @@ func (s *PizzaService) OrderPizza(ctx context.Context, req *pizza.OrderPizzaRequ
 
 		resp, err = s.pizzaPostgres.Order().GetOrderItemId(ctx, req)
 		if err != nil {
-			fmt.Println("err3", err)
 			return nil, err
 		}
 
 		resp, err = s.pizzaPostgres.Order().OrderItem(ctx, req)
 		if err != nil {
-			fmt.Println("err4", err)
 			return nil, err
 		}
 
