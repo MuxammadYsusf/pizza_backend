@@ -3,7 +3,6 @@ package postgres
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"github/http/copy/task4/generated/pizza"
 	"github/http/copy/task4/models"
 )
@@ -130,8 +129,6 @@ func (p *pizzas) UpdatePizza(ctx context.Context, req *pizza.UpdatePizzaRequest)
 		req.Photo,
 	)
 
-	fmt.Println("req.Id", req.Id)
-
 	if err != nil {
 		return nil, err
 	}
@@ -204,7 +201,7 @@ func (p *pizzas) GetPizzaCost(ctx context.Context, pizzaId int32) (*pizza.CartIt
 	}, nil
 }
 
-func (p *pizzas) GetAllPizzaCost(ctx context.Context, orderId int32) (*pizza.OrderPizzaResponse, error) {
+func (p *pizzas) GetAllPizzaCost(ctx context.Context, cartId int32) (*pizza.OrderPizzaResponse, error) {
 	var costs []float32
 
 	query := `SELECT 
@@ -215,7 +212,7 @@ func (p *pizzas) GetAllPizzaCost(ctx context.Context, orderId int32) (*pizza.Ord
 	JOIN pizza p ON p.id = ci.pizza_id
 	WHERE ci.cart_id = $1;`
 
-	rows, err := p.db.Query(query, orderId)
+	rows, err := p.db.Query(query, cartId)
 	if err != nil {
 		return nil, err
 	}

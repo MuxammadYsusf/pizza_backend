@@ -20,6 +20,7 @@ type OrderRepo interface {
 	Order(ctx context.Context, req *pizza.OrderPizzaRequest) (*pizza.OrderPizzaResponse, error)
 	OrderItem(ctx context.Context, req *pizza.OrderPizzaRequest) (*pizza.OrderPizzaResponse, error)
 	CheckIsOrdered(ctx context.Context, req *pizza.CheckIsOrderedRequest) (*pizza.CheckIsOrderedResponse, error)
+	CheckOrderItem(ctx context.Context, req *pizza.CheckOrderItemRequest) (*pizza.CheckOrderItemResponse, error)
 	GetOrderId(ctx context.Context, req *pizza.OrderPizzaRequest) (*pizza.OrderPizzaResponse, error)
 	GetOrderItemId(ctx context.Context, req *pizza.OrderPizzaRequest) (*pizza.OrderPizzaResponse, error)
 	UpdateOrderStatus(ctx context.Context, req *pizza.OrderPizzaRequest) (*pizza.OrderPizzaRequest, error)
@@ -49,6 +50,38 @@ func (o *orders) CheckIsOrdered(ctx context.Context, req *pizza.CheckIsOrderedRe
 		Message:   "success",
 		IsOrdered: cart.IsOrdered,
 		Status:    cart.Status,
+	}, nil
+}
+
+func (o *orders) CheckOrderItem(ctx context.Context, req *pizza.CheckOrderItemRequest) (*pizza.CheckOrderItemResponse, error) {
+
+	query := `SELECT id, pizza_id, quantity, order_id, cost FROM order_item WHERE order_id = $1`
+
+	rows, err := o.db.Query(query, req.OrderId)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var ois []*pizza.CheckOrderItemResponse
+	for rows.Next() {
+		var oi models.OrderItem
+		if err := rows.Scan(&oi.Id, &oi.PizzaId, &oi.Quantity, &oi.OrderId, &oi.Caot); err != nil {
+			return nil, err
+		}
+
+		ois = append(ois, &pizza.CheckOrderItemResponse{
+			Id:       oi.Id,
+			PizzaId:  oi.PizzaId,
+			Quantity: oi.Quantity,
+			OrderId:  oi.OrderId,
+			Cost:     oi.Caot,
+		})
+	}
+
+	return &pizza.CheckOrderItemResponse{
+		OrderItems: ois,
 	}, nil
 }
 
@@ -95,7 +128,10 @@ func (o *orders) Order(ctx context.Context, req *pizza.OrderPizzaRequest) (*pizz
 func (o *orders) GetOrderId(ctx context.Context, req *pizza.OrderPizzaRequest) (*pizza.OrderPizzaResponse, error) {
 	var order models.Order
 
-	query := `SELECT id FROM orders WHERE id = $1 AND user_id = $2 ORDER BY id DESC LIMIT 1`
+	query := `SELECT id FROM orders WHERE cart_id = $1 AND user_id = $2 ORDER BY cart_id DESC LIMIT 1`
+
+	fmt.Println("req.CartId", req.CartId)
+	fmt.Println("req.USERID", req.UserId)
 
 	err := o.db.QueryRow(query, req.CartId, req.UserId).Scan(&order.ID)
 	if err != nil {
@@ -173,6 +209,9 @@ func (o *orders) OrderItem(ctx context.Context, req *pizza.OrderPizzaRequest) (*
 			Message: "already ordered",
 		}, nil
 	}
+
+	fmt.Println("ITEMS", req.Items)
+	fmt.Println("REQ:", req)
 
 	query = `INSERT INTO order_item(pizza_id, cost, quantity, order_id) VALUES`
 	values := []interface{}{}

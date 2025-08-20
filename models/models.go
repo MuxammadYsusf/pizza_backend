@@ -52,6 +52,14 @@ type Order struct {
 	Status    string    `json:"status"`
 }
 
+type OrderItem struct {
+	Id       int32   `json:"id"`
+	PizzaId  int32   `json:"pizzaId"`
+	Quantity int32   `json:"quantity"`
+	OrderId  int32   `json:"orderId"`
+	Caot     float32 `json:"cost"`
+}
+
 type Session struct {
 	ID        int       `json:"id"`
 	UserID    int       `json:"userId"`

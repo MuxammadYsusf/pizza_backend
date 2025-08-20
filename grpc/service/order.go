@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	c "github/http/copy/task4/constants"
 	"github/http/copy/task4/generated/pizza"
 	"time"
@@ -20,6 +21,20 @@ func (s *PizzaService) OrderPizza(ctx context.Context, req *pizza.OrderPizzaRequ
 		return nil, err
 	}
 	if exists.IsOrdered || exists.Status == c.OrderStatusInProgress {
+		ois, err := s.pizzaPostgres.Order().CheckOrderItem(ctx, &pizza.CheckOrderItemRequest{
+			OrderId: req.Id,
+		})
+		if err != nil {
+			return nil, err
+		}
+		if len(ois.OrderItems) == 0 {
+			resp, err = s.pizzaPostgres.Order().OrderItem(ctx, req)
+			if err != nil {
+				fmt.Println("err4", err)
+				return nil, err
+			}
+		}
+
 		req.Date = timestamppb.New(time.Now())
 		resp = &pizza.OrderPizzaResponse{
 			Message: "already ordered",
@@ -50,13 +65,15 @@ func (s *PizzaService) OrderPizza(ctx context.Context, req *pizza.OrderPizzaRequ
 
 		resp, err := s.pizzaPostgres.Order().GetOrderId(ctx, req)
 		if err != nil {
+			fmt.Println("err1", err)
 			return nil, err
 		}
 
 		req.Id = resp.Id
 
-		pc, err := s.pizzaPostgres.Pizza().GetAllPizzaCost(ctx, req.Id)
+		pc, err := s.pizzaPostgres.Pizza().GetAllPizzaCost(ctx, req.CartId)
 		if err != nil {
+			fmt.Println("err2", err)
 			return nil, err
 		}
 
@@ -64,11 +81,13 @@ func (s *PizzaService) OrderPizza(ctx context.Context, req *pizza.OrderPizzaRequ
 
 		resp, err = s.pizzaPostgres.Order().GetOrderItemId(ctx, req)
 		if err != nil {
+			fmt.Println("err3", err)
 			return nil, err
 		}
 
 		resp, err = s.pizzaPostgres.Order().OrderItem(ctx, req)
 		if err != nil {
+			fmt.Println("err4", err)
 			return nil, err
 		}
 
