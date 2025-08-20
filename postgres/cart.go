@@ -319,7 +319,7 @@ func (c *cart) GetCartrHistory(ctx context.Context, req *pizza.GetCartHistoryReq
 	query := `SELECT c.id, c.is_active, o.date
           FROM cart AS c
           INNER JOIN orders AS o ON o.cart_id = c.id
-          WHERE c.user_id = $1 ORDER BY c.id DESC;`
+          WHERE c.user_id = $1 ORDER BY c.id ASC;`
 
 	rows, err := c.db.Query(query, req.UserId)
 	if err != nil {
