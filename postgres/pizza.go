@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"github/http/copy/task4/generated/pizza"
 	"github/http/copy/task4/models"
 )
@@ -119,16 +120,17 @@ func (p *pizzas) GetPizzas(ctx context.Context, req *pizza.GetPizzasRequest) (*p
 
 func (p *pizzas) UpdatePizza(ctx context.Context, req *pizza.UpdatePizzaRequest) (*pizza.UpdatePizzaResponse, error) {
 
-	query := `UPDATE pizza SET name = $3, cost = $4, photo = $5 WHERE id = $1 AND type_id = $2`
+	query := `UPDATE pizza SET name = $2, cost = $3, photo = $4 WHERE id = $1`
 
 	_, err := p.db.Exec(
 		query,
 		req.Id,
-		req.TypeId,
 		req.Name,
 		req.Price,
 		req.Photo,
 	)
+
+	fmt.Println("req.Id", req.Id)
 
 	if err != nil {
 		return nil, err
