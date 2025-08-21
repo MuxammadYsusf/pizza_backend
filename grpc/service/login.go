@@ -152,3 +152,81 @@ func (s *AuthService) Logout(ctx context.Context, req *session.LogoutRequest) (*
 
 	return resp, nil
 }
+
+func (s *AuthService) GetUserData(ctx context.Context, req *session.LoginRequest) (*session.LoginResponse, error) {
+
+	n, err := s.authPostgres.Auth().GetUserName(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Username = n.Username
+
+	resp, err := s.authPostgres.Auth().GetUserData(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	resp = &session.LoginResponse{
+		Id:       resp.Id,
+		Username: resp.Username,
+		Role:     resp.Role,
+	}
+
+	return resp, nil
+}
+
+func (s *AuthService) UpdateUserPassword(ctx context.Context, req *session.UpdatePasswordRequest) (*session.UpdatePasswordResponse, error) {
+
+	var resp *session.UpdatePasswordResponse
+
+	n, err := s.authPostgres.Auth().GetUserName(ctx, &session.LoginRequest{
+		Id: req.UserId,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	req.Username = n.Username
+
+	data, err := s.authPostgres.Auth().GetUserData(ctx, &session.LoginRequest{
+		Username: req.Username,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	NewhashedPassword, err := helper.HashPassword(req.NewPassword)
+	if err != nil {
+		return nil, err
+	}
+
+	OldhashedPassword, err := helper.HashPassword(req.OldPassword)
+	if err != nil {
+		return nil, err
+	}
+
+	if data.Password != OldhashedPassword {
+		return nil, fmt.Errorf("invalid password")
+	}
+
+	ConfirmhashedPassword, err := helper.HashPassword(req.ConfirmPassword)
+	if err != nil {
+		return nil, err
+	}
+
+	req.NewPassword = NewhashedPassword
+	req.OldPassword = OldhashedPassword
+	req.ConfirmPassword = ConfirmhashedPassword
+
+	if req.NewPassword == req.ConfirmPassword {
+		resp, err = s.authPostgres.Auth().UpdatePassword(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		return nil, fmt.Errorf("invalid password")
+	}
+
+	return resp, nil
+}

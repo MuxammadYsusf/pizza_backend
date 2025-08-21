@@ -68,6 +68,8 @@ func main() {
 		auth.GET("/pizzas/history", cont.GetCartHistory)
 		auth.GET("/pizzas/history/:id", cont.GetCartItemHistory)
 		auth.PUT("/pizzas/logout", cont.Logout)
+		auth.GET("/pizzas/get/user-data", cont.GetUserData)
+		auth.POST("/pizzas/update-password", cont.UpdateUserPassword)
 	}
 
 	admin := r.Group("/admin", cont.AuthMiddleware)
@@ -89,6 +91,9 @@ func main() {
 		admin.GET("/pizzas/history", cont.GetCartHistory)
 		admin.GET("/pizzas/history/:id", cont.GetCartItemHistory)
 		admin.PUT("/pizzas/logout", cont.Logout)
+		admin.GET("/pizzas/get/user-data", cont.GetUserData)
+		admin.POST("/pizzas/update-password", cont.UpdateUserPassword)
+
 	}
 
 	r.Run(cfg.HttpPort)

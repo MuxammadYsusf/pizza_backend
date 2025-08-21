@@ -21,6 +21,8 @@ type AuthRepo interface {
 	IsLogined(ctx context.Context, req *session.LogoutRequest) (*session.LogoutResponse, error)
 	GetSessionByID(ctx context.Context, id int) (*models.Session, error)
 	GetSessionData(ctx context.Context, id int) (*models.Session, error)
+	GetUserName(ctx context.Context, req *session.LoginRequest) (*session.LoginResponse, error)
+	UpdatePassword(ctx context.Context, req *session.UpdatePasswordRequest) (*session.UpdatePasswordResponse, error)
 	GetSessionId(ctx context.Context) (*models.Session, error)
 }
 
@@ -103,6 +105,29 @@ func (a *auth) Register(ctx context.Context, req *session.RegisterRequest) (*ses
 	}, nil
 }
 
+func (a *auth) GetUserName(ctx context.Context, req *session.LoginRequest) (*session.LoginResponse, error) {
+
+	var (
+		user models.User
+	)
+
+	query := `SELECT name FROM users WHERE id = $1`
+
+	err := a.db.QueryRow(query, req.Id).Scan(&user.Username)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, err
+		}
+		return nil, err
+	}
+
+	fmt.Println("NME IN DB", user.Username)
+
+	return &session.LoginResponse{
+		Username: user.Username,
+	}, nil
+}
+
 func (a *auth) GetUserData(ctx context.Context, req *session.LoginRequest) (*session.LoginResponse, error) {
 
 	var (
@@ -121,7 +146,7 @@ func (a *auth) GetUserData(ctx context.Context, req *session.LoginRequest) (*ses
 
 	return &session.LoginResponse{
 		Id:       user.ID,
-		Name:     user.Username,
+		Username: user.Username,
 		Password: user.Password,
 		Role:     user.Role,
 	}, nil
@@ -232,5 +257,19 @@ func (a *auth) GetSessionId(ctx context.Context) (*models.Session, error) {
 
 	return &models.Session{
 		ID: session.ID,
+	}, nil
+}
+
+func (a *auth) UpdatePassword(ctx context.Context, req *session.UpdatePasswordRequest) (*session.UpdatePasswordResponse, error) {
+
+	query := `UPDATE users SET password = $2 WHERE name = $1`
+
+	_, err := a.db.Exec(query, req.Username, req.NewPassword)
+	if err != nil {
+		return nil, err
+	}
+
+	return &session.UpdatePasswordResponse{
+		Message: "success",
 	}, nil
 }

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	c "github/http/copy/task4/constants"
 	"github/http/copy/task4/generated/session"
 	"net/http"
@@ -65,4 +66,45 @@ func (h *Handler) Logout(ctx *gin.Context) {
 
 	ctx.JSON(c.OK, resp)
 
+}
+
+func (h *Handler) GetUserData(ctx *gin.Context) {
+
+	userId := ctx.GetInt("userId")
+
+	fmt.Println(userId)
+
+	resp, err := h.GRPCClient.Auth().GetUserData(ctx, &session.LoginRequest{
+		Id: int32(userId),
+	})
+	if err != nil {
+		ctx.JSON(c.Err, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, resp)
+}
+
+func (h *Handler) UpdateUserPassword(ctx *gin.Context) {
+	var req struct {
+		l      session.UpdatePasswordRequest
+		UserId int `json:"userId"`
+	}
+
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(c.BadReq, gin.H{"error": err.Error()})
+		return
+	}
+
+	resp, err := h.GRPCClient.Auth().UpdateUserPassword(ctx, &session.UpdatePasswordRequest{
+		UserId:      int32(req.UserId),
+		OldPassword: req.l.OldPassword,
+		NewPassword: req.l.NewPassword,
+	})
+	if err != nil {
+		ctx.JSON(c.Err, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, resp)
 }

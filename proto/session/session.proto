@@ -9,6 +9,8 @@ service AuthService {
     rpc Register(RegisterRequest) returns (RegisterResponse);
     rpc Login(LoginRequest) returns (LoginResponse);
     rpc Logout(LogoutRequest) returns (LogoutResponse);
+    rpc GetUserData(LoginRequest) returns (LoginResponse);
+    rpc UpdateUserPassword(UpdatePasswordRequest) returns (UpdatePasswordResponse);
 }
 
 message RegisterRequest {
@@ -25,12 +27,13 @@ message RegisterResponse {
 message LoginRequest {
     string username = 1;
     string password = 2;
+    int32 id = 3;
 }
 
 message LoginResponse {
     string message = 1;
     int32 id = 2;
-    string name = 3;
+    string username = 3;
     string password = 4;
     string role = 5;
     string token = 6;
@@ -56,5 +59,17 @@ message LogoutRequest {
 }
 
 message LogoutResponse {
+    string message = 1;
+}
+
+message UpdatePasswordRequest {
+    int32 userId = 1;
+    string username = 2;
+    string oldPassword = 3;
+    string newPassword = 4;
+    string confirmPassword = 5;
+}
+
+message UpdatePasswordResponse {
     string message = 1;
 }
