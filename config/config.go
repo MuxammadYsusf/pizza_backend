@@ -124,6 +124,9 @@ func (c *Config) decideURLMode() {
 	default:
 		mode = "raw"
 	}
+
+	/*  QUESTION IN RAW 122 */
+
 	if mode == "auto" {
 		if c.PostgresHost != "" && c.PostgresPort != "" && c.PostgresUser != "" &&
 			c.PostgresPassword != "" && c.PostgresDatabase != "" {
