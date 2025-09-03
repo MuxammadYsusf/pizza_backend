@@ -121,8 +121,6 @@ func (a *auth) GetUserName(ctx context.Context, req *session.LoginRequest) (*ses
 		return nil, err
 	}
 
-	fmt.Println("NME IN DB", user.Username)
-
 	return &session.LoginResponse{
 		Username: user.Username,
 	}, nil

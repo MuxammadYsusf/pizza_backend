@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	c "github/http/copy/task4/constants"
 	"github/http/copy/task4/generated/session"
 	"net/http"
@@ -71,8 +70,6 @@ func (h *Handler) Logout(ctx *gin.Context) {
 func (h *Handler) GetUserData(ctx *gin.Context) {
 
 	userId := ctx.GetInt("userId")
-
-	fmt.Println(userId)
 
 	resp, err := h.GRPCClient.Auth().GetUserData(ctx, &session.LoginRequest{
 		Id: int32(userId),
